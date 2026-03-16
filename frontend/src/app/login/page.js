@@ -22,7 +22,7 @@ const ANIME_IMAGES = [
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ nombre: '', email: '', contraseña: '', fecha_nacimiento: '' });
+  const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_nacimiento: '' });
 
   const { login, register } = useAuth();
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (isLogin) {
-        await login(form.email, form.contraseña);
+        await login(form.email, form.password);
         toast.success('¡Bienvenido de vuelta!');
         router.push('/');
       } else {
@@ -153,11 +153,11 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Contraseña</label>
+                <label className="block text-sm text-gray-400 mb-1">password</label>
                 <input
                   type="password"
-                  name="contraseña"
-                  value={form.contraseña}
+                  name="password"
+                  value={form.password}
                   onChange={handleChange}
                   required
                   placeholder="••••••••"

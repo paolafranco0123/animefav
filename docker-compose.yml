@@ -47,7 +47,7 @@ services:
     container_name: animefav_backend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       PORT: 3000
       DB_HOST: db
