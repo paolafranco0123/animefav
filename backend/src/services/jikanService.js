@@ -1,19 +1,38 @@
 const axios = require('axios');
+const redis = require('../config/redis');
 
 const JIKAN_BASE_URL = 'https://api.jikan.moe/v4';
 
+const CACHE_TTL = {
+  TOP_ANIME: 60 * 60,
+  CURRENT_SEASON: 60 * 30,
+  GENRES: 60 * 60 * 24,
+  ANIME_DETAIL: 60 * 60 * 6
+};
+
+async function getFromCache(key) {
+  try {
+    const data = await redis.get(key);
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveToCache(key, data, ttl) {
+  try {
+    await redis.setEx(key, ttl, JSON.stringify(data));
+  } catch {
+    // Si Redis falla, no pasa nada
+  }
+}
+
 class JikanService {
-  
-  // Buscar animes por título
+
   static async searchAnime(query, page = 1, limit = 25) {
     try {
       const response = await axios.get(`${JIKAN_BASE_URL}/anime`, {
-        params: {
-          q: query,
-          page: page,
-          limit: limit,
-          sfw: true // Safe for work
-        }
+        params: { q: query, page, limit, sfw: true }
       });
       return response.data;
     } catch (error) {
@@ -21,68 +40,76 @@ class JikanService {
       throw error;
     }
   }
-  
-  // Obtener anime por ID de MAL
+
   static async getAnimeById(malId) {
+    const cacheKey = `jikan:anime:${malId}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) return cached;
+
     try {
       const response = await axios.get(`${JIKAN_BASE_URL}/anime/${malId}/full`);
-      return response.data.data;
+      const data = response.data.data;
+      await saveToCache(cacheKey, data, CACHE_TTL.ANIME_DETAIL);
+      return data;
     } catch (error) {
       console.error('Error obteniendo anime:', error);
       throw error;
     }
   }
-  
-  // Obtener los animes más populares
+
   static async getTopAnime(page = 1, limit = 25) {
+    const cacheKey = `jikan:top:${page}:${limit}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) return cached;
+
     try {
       const response = await axios.get(`${JIKAN_BASE_URL}/top/anime`, {
-        params: {
-          page: page,
-          limit: limit
-        }
+        params: { page, limit }
       });
+      await saveToCache(cacheKey, response.data, CACHE_TTL.TOP_ANIME);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo top animes:', error);
       throw error;
     }
   }
-  
-  // Obtener animes de la temporada actual
+
   static async getCurrentSeason(page = 1) {
+    const cacheKey = `jikan:season:now:${page}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) return cached;
+
     try {
       const response = await axios.get(`${JIKAN_BASE_URL}/seasons/now`, {
-        params: {
-          page: page
-        }
+        params: { page }
       });
+      await saveToCache(cacheKey, response.data, CACHE_TTL.CURRENT_SEASON);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo temporada actual:', error);
       throw error;
     }
   }
-  
-  // Obtener géneros disponibles
+
   static async getGenres() {
+    const cacheKey = 'jikan:genres';
+    const cached = await getFromCache(cacheKey);
+    if (cached) return cached;
+
     try {
       const response = await axios.get(`${JIKAN_BASE_URL}/genres/anime`);
+      await saveToCache(cacheKey, response.data.data, CACHE_TTL.GENRES);
       return response.data.data;
     } catch (error) {
       console.error('Error obteniendo géneros:', error);
       throw error;
     }
   }
-  
-  // Buscar animes por género
+
   static async getAnimeByGenre(genreId, page = 1) {
     try {
       const response = await axios.get(`${JIKAN_BASE_URL}/anime`, {
-        params: {
-          genres: genreId,
-          page: page
-        }
+        params: { genres: genreId, page }
       });
       return response.data;
     } catch (error) {
@@ -90,8 +117,7 @@ class JikanService {
       throw error;
     }
   }
-  
-  // Formatear anime de Jikan a nuestro formato
+
   static formatAnimeForDB(jikanAnime) {
     return {
       titulo: jikanAnime.title || jikanAnime.title_english || 'Sin título',
@@ -100,7 +126,7 @@ class JikanService {
       num_episodios: jikanAnime.episodes || 0,
       edad_recomendada: jikanAnime.rating || 'Unknown',
       imagen_portada: jikanAnime.images?.jpg?.large_image_url || jikanAnime.images?.jpg?.image_url || '',
-      mal_id: jikanAnime.mal_id // Para referencia
+      mal_id: jikanAnime.mal_id
     };
   }
 }
