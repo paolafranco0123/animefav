@@ -31,12 +31,13 @@ yarn-error.log*
 .pnpm-debug.log*
 
 
-# Variables de entorno — NUNCA subir al repo
 .env
 .env.local
 .env.production
 */.env
 */.env.local
+backend/.env
+frontend/.env.local
 
 # vercel
 .vercel
