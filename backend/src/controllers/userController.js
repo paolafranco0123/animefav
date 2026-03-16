@@ -106,16 +106,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Obtener todos los usuarios
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.getAll();
-    res.json(users);
-  } catch (error) {
-    console.error('Error en getAllUsers:', error);
-    res.status(500).json({ error: 'Error al obtener usuarios' });
-  }
-};
 
 module.exports = {
   register,
