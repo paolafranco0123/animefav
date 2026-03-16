@@ -202,6 +202,50 @@ const getListAnimes = async (req, res) => {
   }
 };
 
+// Actualizar episodios vistos de un anime en una lista
+const updateProgress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id, animeId } = req.params;
+    const { episodios_vistos } = req.body;
+
+    if (episodios_vistos === undefined || episodios_vistos < 0) {
+      return res.status(400).json({ error: 'El número de episodios vistos no es válido' });
+    }
+
+    // Verificar que la lista pertenece al usuario
+    const lista = await Lista.findById(id, userId);
+    if (!lista) {
+      return res.status(404).json({ error: 'Lista no encontrada' });
+    }
+
+    // Verificar que el anime está en la lista y obtener total de episodios
+    const progreso = await Lista.getProgress(id, animeId);
+    if (!progreso) {
+      return res.status(404).json({ error: 'El anime no está en esta lista' });
+    }
+
+    // No permitir poner más episodios de los que tiene el anime
+    if (progreso.num_episodios > 0 && episodios_vistos > progreso.num_episodios) {
+      return res.status(400).json({ 
+        error: `Este anime solo tiene ${progreso.num_episodios} episodios` 
+      });
+    }
+
+    await Lista.updateProgress(id, animeId, episodios_vistos);
+
+    res.json({
+      message: 'Progreso actualizado',
+      episodios_vistos,
+      num_episodios: progreso.num_episodios
+    });
+
+  } catch (error) {
+    console.error('Error en updateProgress:', error);
+    res.status(500).json({ error: 'Error al actualizar progreso' });
+  }
+};
+
 module.exports = {
   getUserLists,
   createList,
@@ -210,5 +254,6 @@ module.exports = {
   deleteList,
   addAnimeToList,
   removeAnimeFromList,
-  getListAnimes
+  getListAnimes,
+  updateProgress
 };

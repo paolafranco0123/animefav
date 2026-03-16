@@ -110,7 +110,7 @@ class Lista {
   // Obtener todos los animes de una lista
   static async getAnimes(listaId) {
     const query = `
-      SELECT a.*, la.fecha_añadido
+      SELECT a.*, la.fecha_añadido, la.episodios_vistos
       FROM Anime a
       INNER JOIN Lista_Anime la ON a.id_anime = la.id_anime
       WHERE la.id_lista = ?
@@ -119,6 +119,29 @@ class Lista {
     
     const [rows] = await db.execute(query, [listaId]);
     return rows;
+  }
+
+  // Actualizar episodios vistos de un anime en una lista
+  static async updateProgress(listaId, animeId, episodiosVistos) {
+    const query = `
+      UPDATE Lista_Anime
+      SET episodios_vistos = ?
+      WHERE id_lista = ? AND id_anime = ?
+    `;
+    const [result] = await db.execute(query, [episodiosVistos, listaId, animeId]);
+    return result.affectedRows;
+  }
+
+  // Obtener progreso de un anime concreto en una lista
+  static async getProgress(listaId, animeId) {
+    const query = `
+      SELECT la.episodios_vistos, a.num_episodios, a.titulo
+      FROM Lista_Anime la
+      INNER JOIN Anime a ON la.id_anime = a.id_anime
+      WHERE la.id_lista = ? AND la.id_anime = ?
+    `;
+    const [rows] = await db.execute(query, [listaId, animeId]);
+    return rows[0];
   }
 }
 

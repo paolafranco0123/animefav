@@ -17,5 +17,6 @@ router.delete('/:id', listaController.deleteList);
 router.get('/:id/animes', listaController.getListAnimes);
 router.post('/:id/animes', listaController.addAnimeToList);
 router.delete('/:id/animes/:animeId', listaController.removeAnimeFromList);
+router.patch('/:id/animes/:animeId/progress', listaController.updateProgress);
 
 module.exports = router;
