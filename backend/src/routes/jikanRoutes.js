@@ -10,7 +10,9 @@ router.get('/top', jikanController.getTopAnime);
 router.get('/season/now', jikanController.getCurrentSeason);
 router.get('/genres', jikanController.getGenres);
 
+
 // Rutas protegidas (requieren autenticación)
 router.post('/import/:malId', authMiddleware, jikanController.importAnime);
+router.get('/calendario', authMiddleware, jikanController.getCalendario);
 
 module.exports = router;

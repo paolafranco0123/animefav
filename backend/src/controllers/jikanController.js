@@ -111,11 +111,60 @@ const importAnime = async (req, res) => {
   }
 };
 
+// Calendario de emisiones: animes en "Watching" del usuario que están en emisión
+const getCalendario = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const db = require('../config/database');
+
+    // Obtener los mal_id de los animes que el usuario tiene en "Watching"
+    const [watchingAnimes] = await db.execute(`
+      SELECT a.mal_id, a.titulo, a.imagen_portada, a.num_episodios, la.episodios_vistos
+      FROM Lista_Anime la
+      INNER JOIN Lista l ON la.id_lista = l.id_lista
+      INNER JOIN Anime a ON la.id_anime = a.id_anime
+      WHERE l.id_usuario = ? AND l.nombre = 'Watching' AND a.mal_id IS NOT NULL
+    `, [userId]);
+
+    if (watchingAnimes.length === 0) {
+      return res.json({ data: [], mensaje: 'No tienes animes en tu lista Watching' });
+    }
+
+    // Obtener temporada actual de Jikan
+    const temporadaActual = await JikanService.getCurrentSeason();
+    const enEmision = temporadaActual.data || [];
+
+    // Cruzar los mal_ids del usuario con los animes en emisión
+    const malIdsUsuario = watchingAnimes.map(a => a.mal_id);
+    const calendario = enEmision
+      .filter(anime => malIdsUsuario.includes(anime.mal_id))
+      .map(anime => {
+        const animeLocal = watchingAnimes.find(a => a.mal_id === anime.mal_id);
+        return {
+          mal_id: anime.mal_id,
+          titulo: anime.title,
+          imagen: anime.images?.jpg?.image_url || '',
+          episodios_totales: anime.episodes || animeLocal.num_episodios,
+          episodios_vistos: animeLocal.episodios_vistos,
+          dia_emision: anime.broadcast?.day || 'Unknown',
+          hora_emision: anime.broadcast?.time || '',
+          score: anime.score
+        };
+      });
+
+    res.json({ data: calendario });
+
+  } catch (error) {
+    console.error('Error en getCalendario:', error);
+    res.status(500).json({ error: 'Error al obtener calendario de emisiones' });
+  }
+};
 module.exports = {
   searchAnime,
   getAnimeById,
   getTopAnime,
   getCurrentSeason,
   getGenres,
-  importAnime
+  importAnime,
+  getCalendario
 };
