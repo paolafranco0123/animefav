@@ -33,7 +33,7 @@ export const authAPI = {
 
 export const listasAPI = {
   getAll: () => api.get('/listas'),
-  create: (nombre) => api.post('/listas', { nombre }),
+  create: (nombre, color) => api.post('/listas', { nombre, color }),
   update: (id, nombre) => api.put(`/listas/${id}`, { nombre }),
   delete: (id) => api.delete(`/listas/${id}`),
   getAnimes: (id) => api.get(`/listas/${id}/animes`),

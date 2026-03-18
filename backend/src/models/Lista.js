@@ -22,23 +22,26 @@ class Lista {
   }
   
   // Crear una lista personalizada
-  static async create(userId, nombre) {
+  static async create(userId, nombre, color) {
     const query = `
-      INSERT INTO Lista (nombre, tipo, id_usuario)
-      VALUES (?, 'personalizada', ?)
+      INSERT INTO Lista (nombre, tipo, id_usuario, color)
+      VALUES (?, 'personalizada', ?, ?)
     `;
     
-    const [result] = await db.execute(query, [nombre, userId]);
+    const [result] = await db.execute(query, [nombre, userId, color]);
     return result.insertId;
   }
   
-  // Obtener todas las listas de un usuario
+  // Obtener todas las listas de un usuario con contador de animes
   static async getByUserId(userId) {
     const query = `
-      SELECT id_lista, nombre, tipo, fecha_creacion 
-      FROM Lista 
-      WHERE id_usuario = ?
-      ORDER BY tipo DESC, nombre ASC
+      SELECT l.id_lista, l.nombre, l.tipo, l.fecha_creacion, l.color,
+             COUNT(la.id_anime) as total_animes
+      FROM Lista l
+      LEFT JOIN Lista_Anime la ON l.id_lista = la.id_lista
+      WHERE l.id_usuario = ?
+      GROUP BY l.id_lista, l.nombre, l.tipo, l.fecha_creacion, l.color
+      ORDER BY l.tipo DESC, l.nombre ASC
     `;
     const [rows] = await db.execute(query, [userId]);
     return rows;
@@ -110,11 +113,11 @@ class Lista {
   // Obtener todos los animes de una lista
   static async getAnimes(listaId) {
     const query = `
-      SELECT a.*, la.fecha_añadido, la.episodios_vistos
+      SELECT a.*, la.fecha_anadido, la.episodios_vistos
       FROM Anime a
       INNER JOIN Lista_Anime la ON a.id_anime = la.id_anime
       WHERE la.id_lista = ?
-      ORDER BY la.fecha_añadido DESC
+      ORDER BY la.fecha_anadido DESC
     `;
     
     const [rows] = await db.execute(query, [listaId]);

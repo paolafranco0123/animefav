@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { jikanAPI, listasAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -55,6 +55,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [search, setSearch] = useState('');
   const [addingTo, setAddingTo] = useState(null); // {malId, titulo}
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
@@ -94,6 +95,9 @@ export default function HomePage() {
       await listasAPI.addAnime(listaId, { malId: Number(addingTo.malId) });
       toast.success(`"${addingTo.titulo}" añadido`);
       setAddingTo(null);
+      queryClient.invalidateQueries(['listas']);
+      queryClient.invalidateQueries(['lista-animes', parseInt(listaId)]);
+      queryClient.invalidateQueries(['lista-animes', String(listaId)]);
     } catch {
       toast.error('No se pudo añadir — quizás ya está en esa lista');
     }

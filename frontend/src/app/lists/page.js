@@ -16,6 +16,17 @@ const LIST_CONFIG = {
   'Dropped':       { icon: XCircle,      color: 'text-rose-400',   bg: 'bg-rose-950/40',    border: 'border-rose-500/30',   accent: '#fb7185' },
 };
 
+const COLOR_OPTIONS = {
+  blue:   { label: 'Azul',    color: 'text-blue-400',   bg: 'bg-blue-950/40',   border: 'border-blue-500/50',   accent: '#60a5fa' },
+  green:  { label: 'Verde',   color: 'text-green-400',  bg: 'bg-green-950/40',  border: 'border-green-500/50',  accent: '#4ade80' },
+  purple: { label: 'Morado',  color: 'text-purple-400', bg: 'bg-purple-950/40', border: 'border-purple-500/50', accent: '#c084fc' },
+  yellow: { label: 'Amarillo',color: 'text-yellow-400', bg: 'bg-yellow-950/40', border: 'border-yellow-500/50', accent: '#facc15' },
+  rose:   { label: 'Rosa',    color: 'text-rose-400',   bg: 'bg-rose-950/40',   border: 'border-rose-500/50',   accent: '#fb7185' },
+  orange: { label: 'Naranja', color: 'text-orange-400', bg: 'bg-orange-950/40', border: 'border-orange-500/50', accent: '#fb923c' },
+  cyan:   { label: 'Cyan',    color: 'text-cyan-400',   bg: 'bg-cyan-950/40',   border: 'border-cyan-500/50',   accent: '#22d3ee' },
+  gray:   { label: 'Gris',    color: 'text-gray-400',   bg: 'bg-gray-800/60',   border: 'border-gray-500/50',   accent: '#9ca3af' },
+};
+
 export default function ListsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -23,9 +34,11 @@ export default function ListsPage() {
   const queryClient = useQueryClient();
   const [activeList, setActiveList] = useState(null);
   const [newListName, setNewListName] = useState('');
+  const [newListColor, setNewListColor] = useState('blue');
   const [showNewList, setShowNewList] = useState(false);
   const [editingList, setEditingList] = useState(null);
   const [editName, setEditName] = useState('');
+  const [listPreviews, setListPreviews] = useState({});
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
@@ -42,6 +55,20 @@ export default function ListsPage() {
     enabled: !!user
   });
 
+  // Cargar previews de portadas para cada lista
+  useEffect(() => {
+    if (!listas) return;
+    listas.forEach(async (lista) => {
+      if (lista.total_animes > 0) {
+        try {
+          const res = await listasAPI.getAnimes(lista.id_lista);
+          const images = res.data.slice(0, 5).map(a => a.imagen_portada).filter(Boolean);
+          setListPreviews(prev => ({ ...prev, [lista.id_lista]: images }));
+        } catch {}
+      }
+    });
+  }, [listas]);
+
   const { data: animesEnLista, isLoading: loadingAnimes } = useQuery({
     queryKey: ['lista-animes', activeList],
     queryFn: () => listasAPI.getAnimes(activeList).then(r => r.data),
@@ -49,8 +76,8 @@ export default function ListsPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: () => listasAPI.create(newListName),
-    onSuccess: () => { queryClient.invalidateQueries(['listas']); toast.success('Lista creada'); setNewListName(''); setShowNewList(false); },
+    mutationFn: () => listasAPI.create(newListName, newListColor),
+    onSuccess: () => { queryClient.invalidateQueries(['listas']); toast.success('Lista creada'); setNewListName(''); setNewListColor('blue'); setShowNewList(false); },
     onError: () => toast.error('No se pudo crear la lista')
   });
 
@@ -68,7 +95,11 @@ export default function ListsPage() {
 
   const removeAnimeMutation = useMutation({
     mutationFn: ({ listaId, animeId }) => listasAPI.removeAnime(listaId, animeId),
-    onSuccess: () => { queryClient.invalidateQueries(['lista-animes', activeList]); toast.success('Anime eliminado'); }
+    onSuccess: () => {
+      queryClient.invalidateQueries(['lista-animes', activeList]);
+      queryClient.invalidateQueries(['listas']);
+      toast.success('Anime eliminado');
+    }
   });
 
   const updateProgressMutation = useMutation({
@@ -97,7 +128,6 @@ export default function ListsPage() {
 
     return (
       <main className="min-h-screen bg-gray-950 relative overflow-hidden">
-        {/* Fondo gradiente por lista */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: gradient }} />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(10,10,15,0.8) 100%)' }} />
 
@@ -195,17 +225,35 @@ export default function ListsPage() {
         </div>
 
         {showNewList && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6 flex gap-3">
-            <input
-              type="text"
-              value={newListName}
-              onChange={e => setNewListName(e.target.value)}
-              placeholder="Nombre de la lista..."
-              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-rose-500/50"
-              onKeyDown={e => e.key === 'Enter' && createMutation.mutate()}
-            />
-            <button onClick={() => createMutation.mutate()} className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm">Crear</button>
-            <button onClick={() => setShowNewList(false)} className="text-gray-500 hover:text-white px-2"><X size={16} /></button>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+            <div className="flex gap-3 mb-4">
+              <input
+                type="text"
+                value={newListName}
+                onChange={e => setNewListName(e.target.value)}
+                placeholder="Nombre de la lista..."
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-rose-500/50"
+                onKeyDown={e => e.key === 'Enter' && createMutation.mutate()}
+              />
+              <button onClick={() => setShowNewList(false)} className="text-gray-500 hover:text-white px-2"><X size={16} /></button>
+            </div>
+            <div className="mb-4">
+              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Color</p>
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(COLOR_OPTIONS).map(([key, opt]) => (
+                  <button
+                    key={key}
+                    onClick={() => setNewListColor(key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${opt.color} ${opt.bg} ${newListColor === key ? opt.border + ' scale-105' : 'border-transparent opacity-50'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={() => createMutation.mutate()} className="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
+              Crear lista
+            </button>
           </div>
         )}
 
@@ -217,23 +265,53 @@ export default function ListsPage() {
             {/* Listas predeterminadas */}
             <div>
               <p className="text-xs text-gray-600 uppercase tracking-widest mb-4">Listas predeterminadas</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {predeterminadas.map(lista => {
-                  const config = LIST_CONFIG[lista.nombre] || { icon: BookmarkPlus, color: 'text-gray-400', bg: 'bg-gray-900', border: 'border-gray-700' };
+                  const config = LIST_CONFIG[lista.nombre] || { icon: BookmarkPlus, color: 'text-gray-400', bg: 'bg-gray-900', border: 'border-gray-700', accent: '#9ca3af' };
                   const Icon = config.icon;
+                  const previews = listPreviews[lista.id_lista] || [];
                   return (
                     <button
                       key={lista.id_lista}
                       onClick={() => setActiveList(lista.id_lista)}
-                      className={`flex items-center gap-4 p-4 ${config.bg} border ${config.border} rounded-2xl hover:brightness-110 transition-all text-left group`}
+                      className={`${config.bg} border ${config.border} rounded-2xl p-5 hover:brightness-110 transition-all text-left group relative overflow-hidden`}
                     >
-                      <div className={`p-3 rounded-xl bg-black/20`}>
-                        <Icon size={22} className={config.color} />
+                      {/* Glow de fondo */}
+                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle, ${config.accent} 0%, transparent 70%)`, filter: 'blur(20px)' }} />
+
+                      {/* Cabecera */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="p-2.5 rounded-xl bg-black/20">
+                          <Icon size={20} className={config.color} />
+                        </div>
+                        {/* Número grande */}
+                        <span className={`text-3xl font-black ${config.color} opacity-90`}>{lista.total_animes || 0}</span>
                       </div>
-                      <div>
-                        <p className={`font-semibold text-sm ${config.color}`}>{lista.nombre}</p>
-                        <p className="text-gray-600 text-xs mt-0.5">{lista.total_animes || 0} animes</p>
-                      </div>
+
+                      {/* Nombre */}
+                      <p className={`font-bold text-sm ${config.color} mb-3`}>{lista.nombre}</p>
+
+                      {/* Mini portadas apiladas */}
+                      {previews.length > 0 ? (
+                        <div className="flex items-center">
+                          {previews.slice(0, 5).map((src, i) => (
+                            <div
+                              key={i}
+                              className="w-7 h-7 rounded-full overflow-hidden border-2 border-gray-950 shrink-0"
+                              style={{ marginLeft: i > 0 ? '-8px' : '0', zIndex: previews.length - i }}
+                            >
+                              <img src={src} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                          {lista.total_animes > 5 && (
+                            <div className="w-7 h-7 rounded-full bg-gray-800 border-2 border-gray-950 flex items-center justify-center -ml-2">
+                              <span className="text-gray-400 text-[9px] font-bold">+{lista.total_animes - 5}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 text-xs">Sin animes aún</p>
+                      )}
                     </button>
                   );
                 })}
@@ -245,8 +323,11 @@ export default function ListsPage() {
               <div>
                 <p className="text-xs text-gray-600 uppercase tracking-widest mb-4">Mis listas</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {personalizadas.map(lista => (
-                    <div key={lista.id_lista} className="flex items-center gap-4 p-4 bg-gray-900 border border-gray-800 rounded-2xl group">
+                  {personalizadas.map(lista => {
+                    const colP = COLOR_OPTIONS[lista.color] || COLOR_OPTIONS.gray;
+                    return (
+                    <div key={lista.id_lista} className={`flex items-center gap-4 p-4 ${colP.bg} border ${colP.border} rounded-2xl group relative overflow-hidden`}>
+                      <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle, ${colP.accent} 0%, transparent 70%)`, filter: 'blur(15px)' }} />
                       {editingList === lista.id_lista ? (
                         <>
                           <input
@@ -260,11 +341,16 @@ export default function ListsPage() {
                       ) : (
                         <>
                           <button onClick={() => setActiveList(lista.id_lista)} className="flex-1 flex items-center gap-3 text-left">
-                            <div className="p-3 rounded-xl bg-gray-800">
-                              <BookmarkPlus size={20} className="text-gray-400" />
-                            </div>
+                            {(() => {
+                              const col = COLOR_OPTIONS[lista.color] || COLOR_OPTIONS.gray;
+                              return (
+                                <div className={`p-3 rounded-xl ${col.bg}`}>
+                                  <BookmarkPlus size={20} className={col.color} />
+                                </div>
+                              );
+                            })()}
                             <div>
-                              <p className="text-white font-semibold text-sm">{lista.nombre}</p>
+                              <p className={`font-semibold text-sm ${colP.color}`}>{lista.nombre}</p>
                               <p className="text-gray-600 text-xs mt-0.5">{lista.total_animes || 0} animes</p>
                             </div>
                           </button>
@@ -275,7 +361,7 @@ export default function ListsPage() {
                         </>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             )}
