@@ -18,13 +18,13 @@ const getUserLists = async (req, res) => {
 const createList = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { nombre } = req.body;
-    
+    const { nombre, color } = req.body;
+
     if (!nombre) {
       return res.status(400).json({ error: 'El nombre de la lista es obligatorio' });
     }
     
-    const listaId = await Lista.create(userId, nombre);
+    const listaId = await Lista.create(userId, nombre, color);
     
     res.status(201).json({
       message: 'Lista creada exitosamente',
@@ -145,6 +145,14 @@ const addAnimeToList = async (req, res) => {
     if (!added) {
       return res.status(400).json({ error: 'El anime ya está en la lista' });
     }
+
+    // Si la lista es "Completed", marcar todos los episodios como vistos
+    if (lista.nombre === 'Completed') {
+      const anime = await Anime.findById(finalAnimeId);
+      if (anime && anime.num_episodios > 0) {
+        await Lista.updateProgress(id, finalAnimeId, anime.num_episodios);
+      }
+    }
     
     res.status(201).json({ 
       message: 'Anime agregado a la lista',
@@ -223,6 +231,11 @@ const updateProgress = async (req, res) => {
     const progreso = await Lista.getProgress(id, animeId);
     if (!progreso) {
       return res.status(404).json({ error: 'El anime no está en esta lista' });
+    }
+
+    // No permitir modificar progreso si la lista es "Completed"
+    if (lista.nombre === 'Completed') {
+      return res.status(403).json({ error: 'No puedes modificar el progreso de un anime completado' });
     }
 
     // No permitir poner más episodios de los que tiene el anime

@@ -41,6 +41,7 @@ CREATE TABLE Lista (
   id_lista       INT AUTO_INCREMENT PRIMARY KEY,
   nombre         VARCHAR(100)                           NOT NULL,
   tipo           ENUM('predeterminada','personalizada') NOT NULL DEFAULT 'personalizada',
+  color          VARCHAR(20)                            NOT NULL DEFAULT 'gray',
   id_usuario     INT                                    NOT NULL,
   fecha_creacion TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_lista_usuario (nombre, id_usuario),
