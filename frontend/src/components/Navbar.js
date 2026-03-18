@@ -4,14 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Search, List, BarChart2, Calendar, User, LogOut, Menu, X } from 'lucide-react';
+import { Search, List, BarChart2, Calendar, User, LogOut, Menu, X, Home } from 'lucide-react';
 
 const NAV_LINKS = [
-  { href: '/',         label: 'Inicio',      icon: null },
-  { href: '/search',   label: 'Buscar',       icon: Search },
-  { href: '/lists',    label: 'Mis listas',   icon: List },
-  { href: '/stats',    label: 'Estadísticas', icon: BarChart2 },
-  { href: '/calendar', label: 'Calendario',   icon: Calendar },
+  { href: '/',         label: 'Inicio',     icon: Home },
+  { href: '/search',   label: 'Buscar',     icon: Search },
+  { href: '/lists',    label: 'Listas',     icon: List },
+  { href: '/stats',    label: 'Stats',      icon: BarChart2 },
+  { href: '/calendar', label: 'Calendario', icon: Calendar },
 ];
 
 export default function Navbar() {
@@ -36,25 +36,26 @@ export default function Navbar() {
             <span className="text-rose-500">Fav</span>
           </Link>
 
-          {/* Links desktop */}
+          {/* Links desktop — iconos + texto */}
           <div className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ href, label }) => (
+            {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   pathname === href
                     ? 'bg-rose-600/15 text-rose-400'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {label}
+                <Icon size={15} />
+                <span>{label}</span>
               </Link>
             ))}
           </div>
 
           {/* Derecha desktop */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1">
             {user ? (
               <>
                 <Link
@@ -65,31 +66,25 @@ export default function Navbar() {
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <User size={16} />
-                  <span className="font-medium">{user.nombre}</span>
+                  <User size={15} />
+                  <span className="font-medium max-w-[80px] truncate">{user.nombre}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:text-red-400 hover:bg-red-900/10 transition-colors"
+                  className="p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-900/10 transition-colors"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={15} />
                 </button>
               </>
             ) : (
-              <Link
-                href="/login"
-                className="bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-              >
+              <Link href="/login" className="bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
                 Iniciar sesión
               </Link>
             )}
           </div>
 
           {/* Botón menú móvil */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden text-gray-400 hover:text-white p-2"
-          >
+          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-gray-400 hover:text-white p-2">
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
@@ -109,7 +104,7 @@ export default function Navbar() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              {Icon && <Icon size={16} />}
+              <Icon size={16} />
               {label}
             </Link>
           ))}
