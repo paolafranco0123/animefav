@@ -80,8 +80,11 @@ animefav/
 - Reseñas de texto por anime
 - Sistema de recomendaciones basado en historial
 - Verificación por email al registrarse
-- Mejoras de diseño en móvil
-
+- Sinopsis, trailer de YouTube, personajes y voice actors — está en Jikan solo tengo que implementarlo
+- Perfil público para compartir tu lista con otros
+- Página de novedades de la temporada actual
+- Avatar de perfil personalizable con imagenes de anime
+- Foro o comentarios por anime
 ---
 
 **Paola Franco Gilabert — IES Almunia — DAW 2025/2026**
