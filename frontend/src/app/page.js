@@ -22,24 +22,23 @@ function AnimeCard({ anime, onAdd }) {
   const image = anime.images?.jpg?.image_url || anime.imagen_portada;
   const score = anime.score;
   const episodes = anime.episodes || anime.num_episodios;
+  const router = useRouter();
 
   return (
-    <div className="group relative bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-rose-500/40 transition-all duration-300 hover:-translate-y-1">
+    <div className="group relative bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-rose-500/40 transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => router.push(`/anime/${anime.mal_id}`)}>
       <div className="relative aspect-[2/3] overflow-hidden">
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gray-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <button
-            onClick={() => onAdd(anime.mal_id, title)}
-            className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg"
-          >
-            <Plus size={14} /> Añadir
-          </button>
-        </div>
         {score && (
           <div className="absolute top-2 right-2 bg-gray-950/80 backdrop-blur-sm text-yellow-400 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1">
             <Star size={10} fill="currentColor" /> {score}
           </div>
         )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onAdd(anime.mal_id, title); }}
+          className="absolute top-2 left-2 bg-rose-600 hover:bg-rose-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+        >
+          <Plus size={12} />
+        </button>
       </div>
       <div className="p-3">
         <h3 className="text-white text-xs font-semibold line-clamp-2 leading-tight">{title}</h3>

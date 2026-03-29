@@ -85,26 +85,30 @@ const getGenres = async (req, res) => {
   }
 };
 
-// Importar anime de Jikan a nuestra base de datos
 const importAnime = async (req, res) => {
   try {
     const { malId } = req.params;
-    
-    // Obtener anime de Jikan
+
+    // Verificar si ya existe
+    const existingAnime = await Anime.findByMalId(malId);
+    if (existingAnime) {
+      return res.status(200).json({
+        message: 'Anime ya existe',
+        animeId: existingAnime.id_anime,
+        anime: existingAnime
+      });
+    }
+
     const jikanAnime = await JikanService.getAnimeById(malId);
-    
-    // Formatear para nuestra BD
     const animeData = JikanService.formatAnimeForDB(jikanAnime);
-    
-    // Guardar en nuestra BD
     const animeId = await Anime.create(animeData);
-    
+
     res.status(201).json({
       message: 'Anime importado exitosamente',
       animeId,
       anime: animeData
     });
-    
+
   } catch (error) {
     console.error('Error en importAnime:', error);
     res.status(500).json({ error: 'Error al importar anime' });

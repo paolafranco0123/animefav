@@ -22,7 +22,7 @@ const ANIME_IMAGES = [
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_nacimiento: '' });
+  const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_nacimiento: 'null' });
 
   const { login, register } = useAuth();
   const router = useRouter();
