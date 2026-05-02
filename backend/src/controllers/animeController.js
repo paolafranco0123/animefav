@@ -116,9 +116,23 @@ const getAnimeGenres = async (req, res) => {
   }
 };
 
+const getAnimeByMalId = async (req, res) => {
+  try {
+    const { malId } = req.params;
+    const anime = await Anime.findByMalId(malId);
+    if (!anime) {
+      return res.status(404).json({ error: 'Anime no encontrado' });
+    }
+    res.json(anime);
+  } catch (error) {
+    console.error('Error en getAnimeByMalId:', error);
+    res.status(500).json({ error: 'Error al obtener anime' });
+  }
+};
 module.exports = {
   getAllAnimes,
   getAnimeById,
+  getAnimeByMalId,
   searchAnime,
   createAnime,
   updateAnime,

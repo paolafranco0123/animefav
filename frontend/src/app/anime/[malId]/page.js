@@ -65,6 +65,58 @@ export default function AnimeDetailPage() {
     enabled: !!user
   });
 
+  // Helper para obtener id local del anime
+const getLocalAnimeId = async () => {
+  await jikanAPI.import(malId);
+  const res = await fetch(`http://localhost:3001/api/animes/mal/${malId}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  });
+  const data = await res.json();
+  return data?.id_anime;
+};
+
+// Cargar puntuación existente
+const { data: miPuntuacion } = useQuery({
+  queryKey: ['puntuacion', malId],
+  queryFn: async () => {
+    try {
+      const animeId = await getLocalAnimeId();
+      if (!animeId) return null;
+      const r = await puntuacionesAPI.getMyRating(animeId);
+      return r.data;
+    } catch { return null; }
+  },
+  enabled: !!malId && !!user && !!anime
+});
+
+// Cargar reseña existente
+const { data: miResenia, refetch: refetchResenia } = useQuery({
+  queryKey: ['resenia', malId],
+  queryFn: async () => {
+    try {
+      const animeId = await getLocalAnimeId();
+      if (!animeId) return null;
+      const r = await reseniasAPI.getByAnime(animeId);
+      return r.data?.reviews?.find(rev => rev.id_usuario === user?.id) || null;
+    } catch { return null; }
+  },
+  enabled: !!malId && !!user && !!anime
+});
+
+// Cargar puntuación en el estado cuando llegue
+useEffect(() => {
+  if (miPuntuacion?.valor) {
+    setMyRating(miPuntuacion.valor);
+  }
+}, [miPuntuacion]);
+
+// Cargar reseña en el estado cuando llegue
+useEffect(() => {
+  if (miResenia?.texto) {
+    setReviewText(miResenia.texto);
+  }
+}, [miResenia]);
+
   const addToListMutation = useMutation({
     mutationFn: () => listasAPI.addAnime(selectedList, { malId: Number(malId) }),
     onSuccess: () => {
@@ -77,19 +129,18 @@ export default function AnimeDetailPage() {
   });
 
   const rateMutation = useMutation({
-    mutationFn: async (valor) => {
-      await jikanAPI.import(malId);
-      const res = await fetch(`http://localhost:3001/api/animes/search?query=${anime?.title}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      const animes = await res.json();
-      const found = animes.find(a => a.mal_id == malId);
-      if (!found) throw new Error('Anime no encontrado');
-      return puntuacionesAPI.rate(found.id_anime, valor);
-    },
-    onSuccess: () => toast.success('Puntuación guardada'),
-    onError: () => toast.error('Error al guardar puntuación')
-  });
+  mutationFn: async (valor) => {
+    const animeId = await getLocalAnimeId();
+    if (!animeId) throw new Error('Anime no encontrado');
+    return puntuacionesAPI.rate(animeId, valor);
+  },
+  onSuccess: () => {
+    toast.success('Puntuación guardada');
+    queryClient.invalidateQueries(['puntuacion', malId]);
+    queryClient.invalidateQueries(['my-ratings']);
+  },
+  onError: () => toast.error('Error al guardar puntuación')
+});
 
   if (loading || !user) return null;
   if (isLoading) return (
@@ -289,14 +340,27 @@ export default function AnimeDetailPage() {
           Cancelar
         </button>
         <button
-          onClick={() => {
-            if (reviewText.trim().length < 10) {
-              toast.error('La reseña debe tener al menos 10 caracteres');
-              return;
-            }
-            toast.success('Reseña guardada');
-            setEditingReview(false);
-          }}
+          onClick={async () => {
+  if (reviewText.trim().length < 10) {
+    toast.error('La reseña debe tener al menos 10 caracteres');
+    return;
+  }
+  try {
+    const animeId = await getLocalAnimeId();
+    if (!animeId) { toast.error('No se pudo guardar'); return; }
+    if (miResenia?.id_resenia) {
+      await reseniasAPI.update(miResenia.id_resenia, reviewText.trim());
+    } else {
+      await reseniasAPI.create(animeId, reviewText.trim());
+    }
+    toast.success('Reseña guardada');
+    setEditingReview(false);
+    refetchResenia();
+  } catch {
+    toast.error('Error al guardar la reseña');
+  }
+}}
+        
           className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-xl text-sm transition-colors"
         >
           Guardar

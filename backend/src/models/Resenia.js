@@ -1,100 +1,39 @@
 const db = require('../config/database');
 
 class Resenia {
-  
-  // Crear una reseña
   static async create(userId, animeId, texto) {
-    const query = `
-      INSERT INTO Reseña (id_usuario, id_anime, texto)
-      VALUES (?, ?, ?)
-    `;
-    
-    const [result] = await db.execute(query, [userId, animeId, texto]);
+    const [result] = await db.execute('INSERT INTO Resenia (id_usuario, id_anime, texto) VALUES (?, ?, ?)', [userId, animeId, texto]);
     return result.insertId;
   }
-  
-  // Obtener una reseña por ID
-  static async findById(reseñaId) {
-    const query = `
-      SELECT r.*, u.nombre as usuario_nombre, a.titulo as anime_titulo
-      FROM Reseña r
-      INNER JOIN Usuario u ON r.id_usuario = u.id_usuario
-      INNER JOIN Anime a ON r.id_anime = a.id_anime
-      WHERE r.id_reseña = ?
-    `;
-    const [rows] = await db.execute(query, [reseñaId]);
-    return rows[0];
-  }
-  
-  // Obtener todas las reseñas de un anime
-  static async getByAnimeId(animeId, limit = 20, offset = 0) {
-    const query = `
-      SELECT r.*, u.nombre as usuario_nombre
-      FROM Reseña r
-      INNER JOIN Usuario u ON r.id_usuario = u.id_usuario
-      WHERE r.id_anime = ?
-      ORDER BY r.fecha DESC
-      LIMIT ? OFFSET ?
-    `;
-    const [rows] = await db.execute(query, [animeId, limit, offset]);
+  static async getByAnimeId(animeId, limit, offset) {
+    limit = Number(limit) || 20;
+    offset = Number(offset) || 0;
+    const [rows] = await db.execute('SELECT r.*, u.nombre as usuario_nombre FROM Resenia r INNER JOIN Usuario u ON r.id_usuario = u.id_usuario WHERE r.id_anime = ? ORDER BY r.fecha DESC LIMIT ' + limit + ' OFFSET ' + offset, [animeId]);
     return rows;
   }
-  
-  // Obtener todas las reseñas de un usuario
   static async getByUserId(userId) {
-    const query = `
-      SELECT r.*, a.titulo as anime_titulo, a.imagen_portada
-      FROM Reseña r
-      INNER JOIN Anime a ON r.id_anime = a.id_anime
-      WHERE r.id_usuario = ?
-      ORDER BY r.fecha DESC
-    `;
-    const [rows] = await db.execute(query, [userId]);
+    const [rows] = await db.execute('SELECT r.*, a.titulo as anime_titulo, a.imagen_portada FROM Resenia r INNER JOIN Anime a ON r.id_anime = a.id_anime WHERE r.id_usuario = ? ORDER BY r.fecha DESC', [userId]);
     return rows;
   }
-  
-  // Verificar si un usuario ya reseñó un anime
   static async userHasReviewed(userId, animeId) {
-    const query = `
-      SELECT id_reseña FROM Reseña
-      WHERE id_usuario = ? AND id_anime = ?
-    `;
-    const [rows] = await db.execute(query, [userId, animeId]);
+    const [rows] = await db.execute('SELECT id_resenia FROM Resenia WHERE id_usuario = ? AND id_anime = ?', [userId, animeId]);
     return rows[0];
   }
-  
-  // Actualizar una reseña
-  static async update(reseñaId, userId, texto) {
-    const query = `
-      UPDATE Reseña
-      SET texto = ?
-      WHERE id_reseña = ? AND id_usuario = ?
-    `;
-    
-    const [result] = await db.execute(query, [texto, reseñaId, userId]);
+  static async update(reseniaId, userId, texto) {
+    const [result] = await db.execute('UPDATE Resenia SET texto = ? WHERE id_resenia = ? AND id_usuario = ?', [texto, reseniaId, userId]);
     return result.affectedRows;
   }
-  
-  // Eliminar una reseña
-  static async delete(reseñaId, userId) {
-    const query = `
-      DELETE FROM Reseña
-      WHERE id_reseña = ? AND id_usuario = ?
-    `;
-    
-    const [result] = await db.execute(query, [reseñaId, userId]);
+  static async delete(reseniaId, userId) {
+    const [result] = await db.execute('DELETE FROM Resenia WHERE id_resenia = ? AND id_usuario = ?', [reseniaId, userId]);
     return result.affectedRows;
   }
-  
-  // Contar reseñas de un anime
   static async countByAnimeId(animeId) {
-    const query = `
-      SELECT COUNT(*) as total
-      FROM Reseña
-      WHERE id_anime = ?
-    `;
-    const [rows] = await db.execute(query, [animeId]);
+    const [rows] = await db.execute('SELECT COUNT(*) as total FROM Resenia WHERE id_anime = ?', [animeId]);
     return rows[0].total;
+  }
+  static async findById(reseniaId) {
+    const [rows] = await db.execute('SELECT r.*, u.nombre as usuario_nombre FROM Resenia r INNER JOIN Usuario u ON r.id_usuario = u.id_usuario WHERE r.id_resenia = ?', [reseniaId]);
+    return rows[0];
   }
 }
 
