@@ -5,12 +5,14 @@ CREATE DATABASE IF NOT EXISTS animefav_db
 USE animefav_db;
 
 CREATE TABLE Usuario (
-  id_usuario       INT AUTO_INCREMENT PRIMARY KEY,
-  nombre           VARCHAR(100)  NOT NULL,
-  email            VARCHAR(255)  NOT NULL UNIQUE,
-  password         VARCHAR(255)  NOT NULL,
-  fecha_registro   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  fecha_nacimiento DATE          NULL
+  id_usuario        INT AUTO_INCREMENT PRIMARY KEY,
+  nombre            VARCHAR(100)  NOT NULL,
+  email             VARCHAR(255)  NOT NULL UNIQUE,
+  password          VARCHAR(255)  NOT NULL,
+  fecha_registro    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_nacimiento  DATE          NULL,
+  email_verificado  BOOLEAN       NOT NULL DEFAULT FALSE,
+  token_verificacion VARCHAR(255) NULL
 );
 
 CREATE TABLE Anime (

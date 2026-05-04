@@ -10,6 +10,6 @@ router.post('/login', userController.login);
 
 // Rutas protegidas (requieren autenticación)
 router.get('/profile', authMiddleware, userController.getProfile);
-
+router.get('/verify/:token', userController.verifyEmail);
 
 module.exports = router;

@@ -1,5 +1,8 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { sendVerificationEmail } = require('../services/emailService');
+
+
 
 const register = async (req, res) => {
   try {
@@ -11,11 +14,26 @@ const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'El email ya está registrado' });
     }
-    const userId = await User.create({ nombre, email, password, fecha_nacimiento });
-    res.status(201).json({ message: 'Usuario creado exitosamente', userId });
+    const { userId, token } = await User.create({ nombre, email, password, fecha_nacimiento });
+    await sendVerificationEmail(email, nombre, token);
+    res.status(201).json({ message: 'Cuenta creada. Revisa tu email para verificarla.' });
   } catch (error) {
     console.error('Error en register:', error);
     res.status(500).json({ error: 'Error al crear usuario' });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const affected = await User.verifyEmail(token);
+    if (!affected) {
+      return res.status(400).json({ error: 'Token inválido o ya verificado' });
+    }
+    res.json({ message: 'Email verificado correctamente. Ya puedes iniciar sesión.' });
+  } catch (error) {
+    console.error('Error en verifyEmail:', error);
+    res.status(500).json({ error: 'Error al verificar email' });
   }
 };
 
@@ -29,6 +47,9 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
+    if (!user.email_verificado) {
+      return res.status(403).json({ error: 'Debes verificar tu email antes de iniciar sesión' });
+    }
     const isValidPassword = await User.comparePassword(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
@@ -38,16 +59,13 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    res.json({
-      message: 'Login exitoso',
-      token,
-      user: { id: user.id_usuario, nombre: user.nombre, email: user.email }
-    });
+    res.json({ message: 'Login exitoso', token, user: { id: user.id_usuario, nombre: user.nombre, email: user.email } });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 };
+
 
 const getProfile = async (req, res) => {
   try {
@@ -60,4 +78,4 @@ const getProfile = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getProfile };
+module.exports = { register, login, getProfile, verifyEmail };

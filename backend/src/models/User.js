@@ -4,18 +4,26 @@ const bcrypt = require('bcrypt');
 class User {
 
   static async create(userData) {
-    const { nombre, email, password, fecha_nacimiento } = userData;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const query = `
-      INSERT INTO Usuario (nombre, email, password, fecha_nacimiento)
-      VALUES (?, ?, ?, ?)
-    `;
-    const [result] = await db.execute(query, [nombre, email, hashedPassword, fecha_nacimiento]);
-    const userId = result.insertId;
-    const Lista = require('./Lista');
-    await Lista.createDefaultLists(userId);
-    return userId;
-  }
+  const { nombre, email, password, fecha_nacimiento } = userData;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const crypto = require('crypto');
+  const token = crypto.randomBytes(32).toString('hex');
+  
+  const query = `INSERT INTO Usuario (nombre, email, password, fecha_nacimiento, token_verificacion) VALUES (?, ?, ?, ?, ?)`;
+  const [result] = await db.execute(query, [nombre, email, hashedPassword, fecha_nacimiento || null, token]);
+  const userId = result.insertId;
+  const Lista = require('./Lista');
+  await Lista.createDefaultLists(userId);
+  return { userId, token };
+}
+
+static async verifyEmail(token) {
+  const [result] = await db.execute(
+    `UPDATE Usuario SET email_verificado = TRUE, token_verificacion = NULL WHERE token_verificacion = ?`,
+    [token]
+  );
+  return result.affectedRows;
+}
 
   static async findByEmail(email) {
     const query = 'SELECT * FROM Usuario WHERE email = ?';
