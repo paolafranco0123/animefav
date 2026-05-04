@@ -21,9 +21,9 @@ const ANIME_IMAGES = [
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_nacimiento: 'null' });
-
+const [loading, setLoading] = useState(false);
+const [registroExitoso, setRegistroExitoso] = useState(false);  // ← aquí
+const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_nacimiento: 'null' });
   const { login, register } = useAuth();
   const router = useRouter();
 
@@ -37,11 +37,11 @@ export default function LoginPage() {
         await login(form.email, form.password);
         toast.success('¡Bienvenido de vuelta!');
         router.push('/');
-      } else {
-        await register(form);
-        toast.success('Cuenta creada, ahora inicia sesión');
-        setIsLogin(true);
-      }
+     } else {
+  await register(form);
+  setIsLogin(true);
+  setRegistroExitoso(true);
+}
     } catch (error) {
       toast.error(error.response?.data?.error || 'Algo salió mal');
     } finally {
@@ -121,7 +121,12 @@ export default function LoginPage() {
                 Registrarse
               </button>
             </div>
-
+{registroExitoso && (
+  <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl px-4 py-3 mb-4 text-center">
+    <p className="text-blue-400 text-sm font-medium">📧 Revisa tu email</p>
+    <p className="text-gray-400 text-xs mt-1">Te hemos enviado un enlace de verificación. Debes verificar tu cuenta antes de iniciar sesión.</p>
+  </div>
+)}
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
