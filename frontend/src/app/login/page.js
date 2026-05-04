@@ -43,8 +43,13 @@ const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_na
   setRegistroExitoso(true);
 }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Algo salió mal');
-    } finally {
+  const msg = error.response?.data?.error || 'Algo salió mal';
+  if (error.response?.status === 403) {
+    toast.error('Debes verificar tu email antes de entrar', { duration: 5000 });
+  } else {
+    toast.error(msg);
+  }
+} finally {
       setLoading(false);
     }
   };
