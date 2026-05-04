@@ -29,17 +29,23 @@ async function saveToCache(key, data, ttl) {
 
 class JikanService {
 
-  static async searchAnime(query, page = 1, limit = 25) {
-    try {
-      const response = await axios.get(`${JIKAN_BASE_URL}/anime`, {
-        params: { q: query, page, limit, sfw: true }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error buscando anime:', error);
-      throw error;
-    }
+  static async searchAnime(query, page = 1, limit = 25, filters = {}) {
+  try {
+    const params = { page, limit, sfw: true };
+    if (query) params.q = query;
+    if (filters.type) params.type = filters.type;
+    if (filters.status) params.status = filters.status;
+    if (filters.start_date) params.start_date = `${filters.start_date}-01-01`;
+    if (filters.min_score) params.min_score = filters.min_score;
+    if (filters.genres) params.genres = filters.genres;
+
+    const response = await axios.get(`${JIKAN_BASE_URL}/anime`, { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error buscando anime:', error);
+    throw error;
   }
+}
 
   static async getAnimeById(malId) {
     const cacheKey = `jikan:anime:${malId}`;

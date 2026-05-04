@@ -45,6 +45,13 @@ export const listasAPI = {
 
 export const jikanAPI = {
   search: (query, page = 1) => api.get(`/jikan/search?query=${query}&page=${page}`),
+  searchWithFilters: (params) => {
+    const qs = Object.entries(params)
+      .filter(([_, v]) => v !== '' && v !== undefined)
+      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+      .join('&');
+    return api.get(`/jikan/search?${qs}`);
+  },
   getById: (malId) => api.get(`/jikan/anime/${malId}`),
   getTop: (page = 1) => api.get(`/jikan/top?page=${page}`),
   getCurrentSeason: () => api.get('/jikan/season/now'),

@@ -100,17 +100,17 @@ class Anime {
   }
   
   // Asignar géneros a un anime
- static async assignGenres(animeId, genreIds) {
-  await db.execute('DELETE FROM Anime_Genero WHERE id_anime = ?', [animeId]);
+static async assignGenres(animeId, genreIds) {
+  if (!genreIds || genreIds.length === 0) return;
   
-  if (genreIds && genreIds.length > 0) {
-    const values = genreIds.map(genreId => [animeId, genreId]);
-    const placeholders = values.map(() => '(?, ?)').join(', ');
-    const flatValues = values.flat();
-    
-    const query = `INSERT IGNORE INTO Anime_Genero (id_anime, id_genero) VALUES ${placeholders}`;
-    await db.execute(query, flatValues);
-  }
+  const values = genreIds.map(genreId => [animeId, genreId]);
+  const placeholders = values.map(() => '(?, ?)').join(', ');
+  const flatValues = values.flat();
+  
+  await db.execute(
+    `INSERT IGNORE INTO Anime_Genero (id_anime, id_genero) VALUES ${placeholders}`,
+    flatValues
+  );
 }
 }
 

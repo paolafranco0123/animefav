@@ -3,9 +3,13 @@ const Anime = require('../models/Anime');
 
 const searchAnime = async (req, res) => {
   try {
-    const { query, page = 1, limit = 25 } = req.query;
-    if (!query) return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
-    const result = await JikanService.searchAnime(query, page, limit);
+    const { query, page = 1, limit = 25, type, status, start_date, min_score, genres } = req.query;
+    
+    if (!query && !type && !status && !start_date && !min_score && !genres) {
+      return res.status(400).json({ error: 'Se requiere al menos un parámetro de búsqueda' });
+    }
+
+    const result = await JikanService.searchAnime(query || '', page, limit, { type, status, start_date, min_score, genres });
     res.json({ data: result.data, pagination: result.pagination });
   } catch (error) {
     console.error('Error en searchAnime:', error);
