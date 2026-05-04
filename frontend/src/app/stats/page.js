@@ -120,14 +120,18 @@ export default function StatsPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="flex-1 space-y-2">
-                  {generosFavoritos.map((g, i) => (
-                    <div key={g.nombre} className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                      <span className="text-gray-400 text-xs truncate flex-1">{g.nombre}</span>
-                      <span className="text-white text-xs font-bold">{g.total}</span>
-                    </div>
-                  ))}
-                </div>
+  {generosFavoritos.map((g, i) => {
+    const totalGeneros = generosFavoritos.reduce((acc, x) => acc + x.total, 0);
+    const pct = Math.round((g.total / totalGeneros) * 100);
+    return (
+      <div key={g.nombre} className="flex items-center gap-2">
+        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+        <span className="text-gray-400 text-xs truncate flex-1">{g.nombre}</span>
+        <span className="text-gray-500 text-xs">{pct}%</span>
+      </div>
+    );
+  })}
+</div>
               </div>
             )}
           </div>
