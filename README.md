@@ -87,4 +87,18 @@ animefav/
 - Foro o comentarios por anime
 ---
 
+## Docker Compose y despliegue
+
+El archivo `docker-compose.yml` orquesta tres servicios y está comentado explicando:
+
+- Por qué se usa `restart: unless-stopped` en todos los servicios
+- La diferencia entre exponer un puerto al host y la comunicación interna entre contenedores
+- Cómo funciona `docker-entrypoint-initdb.d` para inicializar la BD automáticamente con `schema.sql`
+- Por qué el backend usa `depends_on` con `condition: service_healthy` en lugar de un simple `depends_on`
+- El propósito de la red bridge `animefav_network` y por qué los servicios se referencian por nombre en lugar de por IP
+
+Ver archivo: [`docker-compose.yml`](./docker-compose.yml)
+
+---
+
 **Paola Franco Gilabert — IES Almunia — DAW 2025/2026**
