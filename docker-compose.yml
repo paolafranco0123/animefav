@@ -2,28 +2,43 @@ version: '3.8'
 
 services:
 
+  # ── BASE DE DATOS ─────────────────────────────────────────
+  # MySQL 8 almacena usuarios, listas, puntuaciones y episodios.
+  # restart: unless-stopped → se reinicia automáticamente si peta,
+  # salvo que lo pares tú manualmente con docker stop.
   db:
     image: mysql:8.0
     container_name: animefav_db
     restart: unless-stopped
     environment:
+      # Las credenciales vienen del archivo .env, nunca hardcodeadas aquí
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASS}
     ports:
+      # Expone MySQL al host para poder conectarse con DBeaver o Workbench.
+      # En producción real se quitaría este mapeo.
       - "3306:3306"
     volumes:
+      # Volumen nombrado: los datos persisten aunque elimines el contenedor
       - db_data:/var/lib/mysql
+      # schema.sql se ejecuta automáticamente la PRIMERA vez que arranca
+      # (solo si el volumen está vacío). Crea las tablas y datos iniciales.
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - animefav_network
     healthcheck:
+      # Comprueba que MySQL acepta conexiones antes de que el backend arranque.
+      # Sin esto, Node intentaría conectarse antes de que la BD esté lista.
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
       timeout: 10s
       retries: 5
-      interval: 10s
 
+  # ── REDIS ─────────────────────────────────────────────────
+  # Caché de sesiones y de respuestas de la API de Jikan.
+  # Alpine es la variante ligera de la imagen (~30 MB vs ~100 MB).
   redis:
     image: redis:7-alpine
     container_name: animefav_redis
@@ -31,15 +46,21 @@ services:
     ports:
       - "6379:6379"
     volumes:
+      # Sin este volumen la caché se pierde al reiniciar el contenedor
       - redis_data:/data
     networks:
       - animefav_network
     healthcheck:
+      # redis-cli ping devuelve PONG si Redis está listo
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ── BACKEND ───────────────────────────────────────────────
+  # API REST Node.js/Express. Se construye desde el Dockerfile
+  # del directorio ./backend en lugar de usar una imagen prebuilt,
+  # así los cambios locales se reflejan al hacer docker-compose up --build.
   backend:
     build:
       context: ./backend
@@ -47,18 +68,27 @@ services:
     container_name: animefav_backend
     restart: unless-stopped
     ports:
+      # Puerto interno 3000 → puerto del host 3001.
+      # Se mapea a 3001 para no colisionar con el frontend de Next.js
+      # que corre en localhost:3000.
       - "3001:3000"
     environment:
       PORT: 3000
+      # DB_HOST es "db", no "localhost": dentro de la red Docker
+      # los servicios se llaman por su nombre, no por IP.
       DB_HOST: db
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
-      REDIS_HOST: redis
+      REDIS_HOST: redis   # igual que DB_HOST, nombre del servicio
       REDIS_PORT: 6379
       NODE_ENV: production
     depends_on:
+      # El backend espera a que db y redis pasen su healthcheck.
+      # "service_healthy" es más fiable que el depends_on simple,
+      # que solo espera a que el contenedor esté arrancado, no a que
+      # la BD esté realmente aceptando conexiones.
       db:
         condition: service_healthy
       redis:
@@ -66,10 +96,17 @@ services:
     networks:
       - animefav_network
 
+# ── VOLÚMENES ─────────────────────────────────────────────────
+# Docker gestiona estos directorios en el host.
+# Se conservan con "docker-compose down".
+# Para borrarlos: "docker-compose down -v" (¡borra la BD!)
 volumes:
   db_data:
   redis_data:
 
+# ── RED ───────────────────────────────────────────────────────
+# Red bridge privada: los tres servicios se ven entre sí por nombre
+# pero están aislados del resto de contenedores del host.
 networks:
   animefav_network:
     driver: bridge
