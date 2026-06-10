@@ -28,7 +28,8 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/users/register', data),
   login: (data) => api.post('/users/login', data),
-  getProfile: () => api.get('/users/profile')
+  getProfile: () => api.get('/users/profile'),
+  updateAvatar: (avatar) => api.put('/users/avatar', { avatar }),
 };
 
 export const listasAPI = {
@@ -76,5 +77,6 @@ export const statsAPI = {
   getTiempo: () => api.get('/stats/tiempo'),
   getPuntuaciones: () => api.get('/stats/puntuaciones')
 };
+
 
 export default api;

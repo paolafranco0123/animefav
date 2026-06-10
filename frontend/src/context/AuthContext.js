@@ -9,14 +9,21 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, []);
+useEffect(() => {
+  const savedUser = localStorage.getItem('user');
+  const token = localStorage.getItem('token');
+  if (savedUser && token) {
+    setUser(JSON.parse(savedUser));
+    // Actualiza con los datos más recientes del backend
+    authAPI.getProfile()
+      .then(res => {
+        setUser(res.data);
+        localStorage.setItem('user', JSON.stringify(res.data));
+      })
+      .catch(() => {}); 
+  }
+  setLoading(false);
+}, []);
 
   const login = async (email, password) => {
     const res = await authAPI.login({ email, password });
@@ -39,7 +46,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+  <AuthContext.Provider value={{ user, setUser, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

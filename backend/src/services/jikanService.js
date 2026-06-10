@@ -16,7 +16,6 @@ async function getFromCache(key) {
     return data ? JSON.parse(data) : null;
   } catch {
     return null;
-<<<<<<< HEAD
   }
 }
 
@@ -48,33 +47,6 @@ static async searchAnime(query, page = 1, limit = 25, filters = {}) {
     throw error;
   }
 }
-=======
-  }
-}
-
-async function saveToCache(key, data, ttl) {
-  try {
-    await redis.setEx(key, ttl, JSON.stringify(data));
-  } catch {
-    // Si Redis falla, no pasa nada
-  }
-}
-
-class JikanService {
-
-  static async searchAnime(query, page = 1, limit = 25) {
-    try {
-      const response = await axios.get(`${JIKAN_BASE_URL}/anime`, {
-        params: { q: query, page, limit, sfw: true }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error buscando anime:', error);
-      throw error;
-    }
-  }
-
->>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
   static async getAnimeById(malId) {
     const cacheKey = `jikan:anime:${malId}`;
     const cached = await getFromCache(cacheKey);
