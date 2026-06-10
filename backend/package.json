@@ -20,11 +20,8 @@
     "jikan-node": "^1.2.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.16.0",
-    "node-fetch": "^2.7.0",
-<<<<<<< HEAD
+      "node-fetch": "^2.7.0",
     "nodemailer": "^6.9.0",
-=======
->>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
     "redis": "^5.11.0"
   },
   "devDependencies": {
