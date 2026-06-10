@@ -10,6 +10,10 @@ router.post('/login', userController.login);
 
 // Rutas protegidas (requieren autenticación)
 router.get('/profile', authMiddleware, userController.getProfile);
+<<<<<<< HEAD
 router.get('/verify/:token', userController.verifyEmail);
+=======
+
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
 
 module.exports = router;

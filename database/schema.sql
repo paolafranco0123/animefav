@@ -12,7 +12,8 @@ CREATE TABLE Usuario (
   fecha_registro    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_nacimiento  DATE          NULL,
   email_verificado  BOOLEAN       NOT NULL DEFAULT FALSE,
-  token_verificacion VARCHAR(255) NULL
+  token_verificacion VARCHAR(255) NULL,
+  avatar             VARCHAR(500) DEFAULT NULL
 );
 
 CREATE TABLE Anime (
