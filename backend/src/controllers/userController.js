@@ -3,7 +3,10 @@ const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require('../services/emailService');
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
 const register = async (req, res) => {
   try {
     const { nombre, email, password, fecha_nacimiento } = req.body;
@@ -14,15 +17,21 @@ const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'El email ya está registrado' });
     }
+<<<<<<< HEAD
     const { userId, token } = await User.create({ nombre, email, password, fecha_nacimiento });
     await sendVerificationEmail(email, nombre, token);
     res.status(201).json({ message: 'Cuenta creada. Revisa tu email para verificarla.' });
+=======
+    const userId = await User.create({ nombre, email, password, fecha_nacimiento });
+    res.status(201).json({ message: 'Usuario creado exitosamente', userId });
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
   } catch (error) {
     console.error('Error en register:', error);
     res.status(500).json({ error: 'Error al crear usuario' });
   }
 };
 
+<<<<<<< HEAD
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
@@ -37,6 +46,8 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+=======
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,9 +58,12 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
+<<<<<<< HEAD
     if (!user.email_verificado) {
       return res.status(403).json({ error: 'Debes verificar tu email antes de iniciar sesión' });
     }
+=======
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
     const isValidPassword = await User.comparePassword(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
@@ -59,14 +73,25 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+<<<<<<< HEAD
     res.json({ message: 'Login exitoso', token, user: { id: user.id_usuario, nombre: user.nombre, email: user.email } });
+=======
+    res.json({
+      message: 'Login exitoso',
+      token,
+      user: { id: user.id_usuario, nombre: user.nombre, email: user.email }
+    });
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -78,4 +103,8 @@ const getProfile = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 module.exports = { register, login, getProfile, verifyEmail };
+=======
+module.exports = { register, login, getProfile };
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32

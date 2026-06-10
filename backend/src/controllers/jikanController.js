@@ -99,11 +99,19 @@ const importAnime = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
+=======
+// Calendario de emisiones: animes en "Watching" del usuario que están en emisión
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
 const getCalendario = async (req, res) => {
   try {
     const userId = req.user.id;
     const db = require('../config/database');
 
+<<<<<<< HEAD
+=======
+    // Obtener los mal_id de los animes que el usuario tiene en "Watching"
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
     const [watchingAnimes] = await db.execute(`
       SELECT a.mal_id, a.titulo, a.imagen_portada, a.num_episodios, la.episodios_vistos
       FROM Lista_Anime la
@@ -116,10 +124,19 @@ const getCalendario = async (req, res) => {
       return res.json({ data: [], mensaje: 'No tienes animes en tu lista Watching' });
     }
 
+<<<<<<< HEAD
     const temporadaActual = await JikanService.getCurrentSeason();
     const enEmision = temporadaActual.data || [];
     const malIdsUsuario = watchingAnimes.map(a => a.mal_id);
 
+=======
+    // Obtener temporada actual de Jikan
+    const temporadaActual = await JikanService.getCurrentSeason();
+    const enEmision = temporadaActual.data || [];
+
+    // Cruzar los mal_ids del usuario con los animes en emisión
+    const malIdsUsuario = watchingAnimes.map(a => a.mal_id);
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
     const calendario = enEmision
       .filter(anime => malIdsUsuario.includes(anime.mal_id))
       .map(anime => {
@@ -143,7 +160,10 @@ const getCalendario = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener calendario de emisiones' });
   }
 };
+<<<<<<< HEAD
 
+=======
+>>>>>>> f47cac16fd014f5b7b878bca514ed2a672961e32
 module.exports = {
   searchAnime,
   getAnimeById,
