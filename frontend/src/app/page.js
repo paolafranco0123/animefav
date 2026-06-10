@@ -48,6 +48,12 @@ function AnimeCard({ anime, onAdd }) {
   );
 }
 
+// para q funcionen algunos animes bug 
+const dedupe = (arr) => arr
+  ? [...new Map(arr.map(a => [a.mal_id, a])).values()]
+  : []; 
+
+
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -102,7 +108,9 @@ export default function HomePage() {
     }
   };
 
-  if (loading || !user) return null;
+if (loading || !user) return null;
+
+
 
   const topAnimes = topData?.data?.slice(0, 12) || [];
   const seasonAnimes = seasonData?.data?.slice(0, 12) || [];

@@ -57,7 +57,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      RESEND_API_KEY: ed69303b-05cb-4320-aa9b-cc84d8a857e7
+      RESEND_API_KEY: ${RESEND_API_KEY}
       NODE_ENV: production
     depends_on:
       db:

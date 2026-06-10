@@ -53,7 +53,7 @@ export default function AnimeDetailPage() {
     if (!loading && !user) router.push('/login');
   }, [user, loading, router]);
 
-  const { data: anime, isLoading } = useQuery({
+const { data: anime, isLoading } = useQuery({
     queryKey: ['anime', malId],
     queryFn: () => jikanAPI.getById(malId).then(r => r.data),
     enabled: !!malId && !!user
@@ -66,41 +66,34 @@ export default function AnimeDetailPage() {
   });
 
   // Helper para obtener id local del anime
-const getLocalAnimeId = async () => {
-  await jikanAPI.import(malId);
-  const res = await fetch(`http://localhost:3001/api/animes/mal/${malId}`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-  });
-  const data = await res.json();
-  return data?.id_anime;
-};
-
-// Cargar puntuación existente
+// Importar una sola vez y guardar el id
+const { data: localAnimeId } = useQuery({
+  queryKey: ['local-anime-id', malId],
+  queryFn: async () => {
+    const r = await jikanAPI.import(malId);
+    return r.data?.animeId;
+  },
+  enabled: !!malId && !!user && !isLoading && !!anime,
+  staleTime: Infinity  
+});
+// Puntuación
 const { data: miPuntuacion } = useQuery({
   queryKey: ['puntuacion', malId],
   queryFn: async () => {
-    try {
-      const animeId = await getLocalAnimeId();
-      if (!animeId) return null;
-      const r = await puntuacionesAPI.getMyRating(animeId);
-      return r.data;
-    } catch { return null; }
+    const r = await puntuacionesAPI.getMyRating(localAnimeId);
+    return r.data;
   },
-  enabled: !!malId && !!user && !!anime
+  enabled: !!localAnimeId  // solo cuando ya tenemos el id
 });
 
-// Cargar reseña existente
+// Reseña
 const { data: miResenia, refetch: refetchResenia } = useQuery({
   queryKey: ['resenia', malId],
   queryFn: async () => {
-    try {
-      const animeId = await getLocalAnimeId();
-      if (!animeId) return null;
-      const r = await reseniasAPI.getByAnime(animeId);
-      return r.data?.reviews?.find(rev => rev.id_usuario === user?.id) || null;
-    } catch { return null; }
+    const r = await reseniasAPI.getByAnime(localAnimeId);
+    return r.data?.reviews?.find(rev => rev.id_usuario === user?.id) || null;
   },
-  enabled: !!malId && !!user && !!anime
+  enabled: !!localAnimeId
 });
 
 // Cargar puntuación en el estado cuando llegue
@@ -129,10 +122,9 @@ useEffect(() => {
   });
 
   const rateMutation = useMutation({
-  mutationFn: async (valor) => {
-    const animeId = await getLocalAnimeId();
-    if (!animeId) throw new Error('Anime no encontrado');
-    return puntuacionesAPI.rate(animeId, valor);
+  mutationFn: (valor) => {
+    if (!localAnimeId) throw new Error('Anime no encontrado');
+    return puntuacionesAPI.rate(localAnimeId, valor);
   },
   onSuccess: () => {
     toast.success('Puntuación guardada');
@@ -148,7 +140,19 @@ useEffect(() => {
       <Loader2 size={32} className="text-rose-500 animate-spin" />
     </div>
   );
-  if (!anime) return null;
+if (!anime && !isLoading) return (
+  <main className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-4">
+    <p className="text-white text-lg font-bold">No se pudo cargar este anime</p>
+    <p className="text-gray-500 text-sm">MyAnimeList no está disponible para este título en este momento</p>
+    <button
+      onClick={() => router.back()}
+      className="text-rose-400 hover:text-rose-300 text-sm transition-colors"
+    >
+      ← Volver
+    </button>
+  </main>
+);
+
 
   const genres = anime.genres?.map(g => g.name) || [];
   const studios = anime.studios?.map(s => s.name).join(', ') || 'Desconocido';
@@ -346,13 +350,13 @@ useEffect(() => {
     return;
   }
   try {
-    const animeId = await getLocalAnimeId();
-    if (!animeId) { toast.error('No se pudo guardar'); return; }
-    if (miResenia?.id_resenia) {
-      await reseniasAPI.update(miResenia.id_resenia, reviewText.trim());
-    } else {
-      await reseniasAPI.create(animeId, reviewText.trim());
-    }
+   const animeId = await getLocalAnimeId();
+if (!localAnimeId) { toast.error('No se pudo guardar'); return; }
+if (miResenia?.id_resenia) {
+  await reseniasAPI.update(miResenia.id_resenia, reviewText.trim());
+} else {
+  await reseniasAPI.create(localAnimeId, reviewText.trim());
+}
     toast.success('Reseña guardada');
     setEditingReview(false);
     refetchResenia();

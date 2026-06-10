@@ -14,7 +14,7 @@ const ESTADOS = [
   { value: 'complete', label: 'Finalizado' },
   { value: 'upcoming', label: 'Próximamente' }
 ];
-const AÑOS = Array.from({ length: 35 }, (_, i) => 2024 - i);
+const AÑOS = Array.from({ length: 35 }, (_, i) => 2026 - i);
 const PUNTUACIONES = [9, 8, 7, 6, 5];
 
 export default function SearchPage() {
@@ -40,26 +40,22 @@ export default function SearchPage() {
   }, [user, loading, router]);
 
   const hasFilters = Object.values(filters).some(v => v !== '');
+const buildSearchParams = () => {
+  const params = { order_by: 'score', sort: 'desc', limit: 25 };
+  if (search) params.q = search;
+  if (filters.tipo) params.type = filters.tipo.toLowerCase();
+  if (filters.estado) params.status = filters.estado;
+  if (filters.puntuacionMin) params.min_score = filters.puntuacionMin;
+  if (filters.genero) params.genres = filters.genero;
+  return params;
+};
 
-  const buildSearchParams = () => {
-    const params = { q: search };
-    if (filters.tipo) params.type = filters.tipo.toLowerCase();
-    if (filters.estado) params.status = filters.estado;
-    if (filters.año) params.start_date = `${filters.año}-01-01`;
-    if (filters.puntuacionMin) params.min_score = filters.puntuacionMin;
-    if (filters.genero) params.genres = filters.genero;
-    if (filters.año) params.start_date = `${filters.año}-01-01`;
-    return params;
-  };
 
   const { data: results, isLoading: searching } = useQuery({
-    queryKey: ['search', search, filters],
-    queryFn: async () => {
-      const params = buildSearchParams();
-      return jikanAPI.searchWithFilters(params).then(r => r.data);
-    },
-    enabled: search.length > 2 || hasFilters
-  });
+  queryKey: ['search', search, filters],
+  queryFn: () => jikanAPI.search(search, 1, filters).then(r => r.data),
+  enabled: search.length > 2 || hasFilters
+});
 
   const { data: listas } = useQuery({
     queryKey: ['listas'],
@@ -89,7 +85,11 @@ export default function SearchPage() {
   };
 
   if (loading || !user) return null;
-  const animes = results?.data || [];
+const animes = (results?.data || []).filter(anime => {
+  if (!filters.año) return true;
+  const año = anime.aired?.from ? new Date(anime.aired.from).getFullYear() : null;
+  return año === parseInt(filters.año);
+});
 
   return (
     <main className="min-h-screen bg-gray-950">
