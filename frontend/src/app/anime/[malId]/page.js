@@ -350,7 +350,7 @@ if (!anime && !isLoading) return (
     return;
   }
   try {
-   const animeId = await getLocalAnimeId();
+
 if (!localAnimeId) { toast.error('No se pudo guardar'); return; }
 if (miResenia?.id_resenia) {
   await reseniasAPI.update(miResenia.id_resenia, reviewText.trim());
