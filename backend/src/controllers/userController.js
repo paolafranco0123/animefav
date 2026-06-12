@@ -98,4 +98,18 @@ const updateAvatar = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getProfile, verifyEmail, updateAvatar };
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se subió ninguna imagen' });
+    }
+    const avatarUrl = req.file.path;
+    await User.updateAvatar(req.user.id, avatarUrl);
+    const updatedUser = await User.findById(req.user.id);
+    res.json({ message: 'Avatar subido correctamente', avatar: avatarUrl, user: updatedUser });
+  } catch (error) {
+    console.error('Error en uploadAvatar:', error);
+    res.status(500).json({ error: 'Error al subir el avatar' });
+  }
+};
+module.exports = { register, login, getProfile, verifyEmail, updateAvatar, uploadAvatar };

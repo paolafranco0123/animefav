@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { statsAPI, puntuacionesAPI, authAPI } from '@/lib/api';
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Clock, Tv, Star, TrendingUp, Loader2, User, Mail, Pencil, X } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+
 
 const ANIMES_POPULARES = [
   { nombre: 'Naruto', mal_id: 20 },
@@ -28,6 +29,9 @@ const ANIMES_POPULARES = [
 
 function AvatarModal({ onClose, onSelect }) {
   const [animeActivo, setAnimeActivo] = useState(ANIMES_POPULARES[0]);
+  const [tab, setTab] = useState('predeterminados');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const { data: personajes, isLoading } = useQuery({
     queryKey: ['avatar-personajes', animeActivo.mal_id],
@@ -43,57 +47,124 @@ function AvatarModal({ onClose, onSelect }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-white font-bold">Elige tu avatar</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-            <X size={20} />
+  <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-white font-bold">Elige tu avatar</h3>
+        <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Tabs principales */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setTab('predeterminados')}
+          className={`text-xs px-3 py-1.5 rounded-lg transition-all border ${
+            tab === 'predeterminados'
+              ? 'bg-rose-600 border-rose-500 text-white'
+              : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'
+          }`}
+        >
+          Personajes
+        </button>
+        <button
+          onClick={() => setTab('subir')}
+          className={`text-xs px-3 py-1.5 rounded-lg transition-all border ${
+            tab === 'subir'
+              ? 'bg-rose-600 border-rose-500 text-white'
+              : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'
+          }`}
+        >
+          Subir foto
+        </button>
+      </div>
+
+      {tab === 'subir' ? (
+        <div className="flex flex-col items-center justify-center py-8 gap-4">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/jpg,image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              setUploading(true);
+              try {
+                const formData = new FormData();
+                formData.append('avatar', file);
+                const res = await authAPI.uploadAvatar(formData);
+                onSelect(res.data.avatar);
+              } catch {
+                toast.error('Error al subir la imagen');
+              } finally {
+                setUploading(false);
+              }
+            }}
+          />
+          <div className="w-24 h-24 rounded-full bg-gray-800 border-2 border-dashed border-gray-600 flex items-center justify-center">
+            <User size={32} className="text-gray-600" />
+          </div>
+          <p className="text-gray-400 text-sm">JPG, PNG o WEBP — máximo 10MB</p>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white text-sm font-medium px-6 py-2.5 rounded-xl transition-colors flex items-center gap-2"
+          >
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : null}
+            {uploading ? 'Subiendo...' : 'Elegir imagen'}
           </button>
         </div>
-        <div className="flex gap-2 flex-wrap mb-5">
-          {ANIMES_POPULARES.map(anime => (
-            <button
-              key={anime.mal_id}
-              onClick={() => setAnimeActivo(anime)}
-              className={`text-xs px-3 py-1.5 rounded-lg transition-all border ${
-                animeActivo.mal_id === anime.mal_id
-                  ? 'bg-rose-600 border-rose-500 text-white'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-white'
-              }`}
-            >
-              {anime.nombre}
-            </button>
-          ))}
-        </div>
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 size={28} className="text-rose-500 animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-80 overflow-y-auto pr-1">
-            {personajes?.map(c => (
+      ) : (
+        <>
+          <div className="flex gap-2 flex-wrap mb-4">
+            {ANIMES_POPULARES.map(anime => (
               <button
-                key={c.character.mal_id}
-                onClick={() => onSelect(c.character.images.jpg.image_url)}
-                className="group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-rose-500 transition-all"
-                title={c.character.name}
+                key={anime.mal_id}
+                onClick={() => setAnimeActivo(anime)}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-all border ${
+                  animeActivo.mal_id === anime.mal_id
+                    ? 'bg-rose-600 border-rose-500 text-white'
+                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-white'
+                }`}
               >
-                <img
-                  src={c.character.images.jpg.image_url}
-                  alt={c.character.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-950/80 to-transparent p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white text-xs text-center truncate">{c.character.name}</p>
-                </div>
+                {anime.nombre}
               </button>
             ))}
           </div>
-        )}
-      </div>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={28} className="text-rose-500 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-80 overflow-y-auto pr-1">
+              {personajes?.map(c => (
+                <button
+                  key={c.character.mal_id}
+                  onClick={() => onSelect(c.character.images.jpg.image_url)}
+                  className="group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-rose-500 transition-all"
+                  title={c.character.name}
+                >
+                  <img
+                    src={c.character.images.jpg.image_url}
+                    alt={c.character.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-950/80 to-transparent p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-white text-xs text-center truncate">{c.character.name}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
-  );
+  </div>
+);
 }
 
 export default function ProfilePage() {
