@@ -10,6 +10,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 
+
 const ANIMES_POPULARES = [
   { nombre: 'Naruto', mal_id: 20 },
   { nombre: 'One Piece', mal_id: 21 },
@@ -45,6 +46,7 @@ function AvatarModal({ onClose, onSelect }) {
     },
     staleTime: Infinity
   });
+
 
   return (
   <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
@@ -172,7 +174,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-
+const [editandoNombre, setEditandoNombre] = useState(false);
+const [nuevoNombre, setNuevoNombre] = useState('');
   useEffect(() => {
     if (!loading && !user) router.push('/login');
   }, [user, loading, router]);
@@ -204,6 +207,17 @@ export default function ProfilePage() {
     }
   });
 
+  const updateProfileMutation = useMutation({
+  mutationFn: (nombre) => authAPI.updateProfile({ nombre }),
+  onSuccess: (res) => {
+    toast.success('Nombre actualizado');
+    const updatedUser = { ...user, nombre: res.data.user.nombre };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setEditandoNombre(false);
+  },
+  onError: () => toast.error('Error al actualizar el nombre')
+});
   if (loading || !user) return null;
 
   const resumen = stats?.resumen || {};
@@ -234,7 +248,44 @@ export default function ProfilePage() {
               </button>
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-black text-white">{user.nombre}</h1>
+             {editandoNombre ? (
+  <div className="flex items-center gap-2">
+    <input
+  value={nuevoNombre}
+  onChange={e => setNuevoNombre(e.target.value)}
+ onKeyDown={e => {
+  if (e.key === 'Enter') updateProfileMutation.mutate(nuevoNombre);
+  if (e.key === 'Escape') setEditandoNombre(false);
+}}
+  className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-rose-500/50"
+  autoFocus
+/>
+    <button
+      onClick={() => updateProfileMutation.mutate(nuevoNombre)}
+      disabled={updateProfileMutation.isPending}
+      className="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors"
+    >
+      Guardar
+    </button>
+    <button
+      onClick={() => setEditandoNombre(false)}
+      className="text-gray-500 hover:text-white text-xs px-3 py-1.5 rounded-lg transition-colors"
+    >
+      Cancelar
+    </button>
+  </div>
+) : (
+  <div className="flex items-center gap-2">
+    <h1 className="text-2xl font-black text-white">{user.nombre}</h1>
+    <button
+      onClick={() => { setNuevoNombre(user.nombre); setEditandoNombre(true); }}
+      className="text-gray-600 hover:text-rose-400 transition-colors"
+      title="Editar nombre"
+    >
+      <Pencil size={14} />
+    </button>
+  </div>
+)}
               <span className="flex items-center gap-1.5 text-gray-500 text-sm mt-1">
                 <Mail size={13} /> {user.email}
               </span>

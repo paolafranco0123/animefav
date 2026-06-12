@@ -33,6 +33,7 @@ export const authAPI = {
   uploadAvatar: (formData) => api.post('/users/avatar/upload', formData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 }),
+updateProfile: (data) => api.put('/users/profile', data),
 };
 
 export const listasAPI = {
