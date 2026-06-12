@@ -66,8 +66,12 @@ export default function Navbar() {
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <User size={15} />
-                  <span className="font-medium max-w-[80px] truncate">{user.nombre}</span>
+                  {user.avatar ? (
+  <img src={user.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
+) : (
+  <User size={15} />
+)}
+<span className="font-medium max-w-[80px] truncate">{user.nombre}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -111,8 +115,13 @@ export default function Navbar() {
           <div className="border-t border-gray-800 pt-2 mt-2">
             {user ? (
               <>
-                <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5">
-                  <User size={16} />{user.nombre}
+              <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5">
+  {user.avatar ? (
+    <img src={user.avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
+  ) : (
+    <User size={16} />
+  )}
+  {user.nombre}
                 </Link>
                 <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-400 w-full">
                   <LogOut size={16} />Cerrar sesión

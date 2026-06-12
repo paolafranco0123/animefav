@@ -23,7 +23,7 @@ const listaRoutes = require('./src/routes/listaRoutes');
 const puntuacionRoutes = require('./src/routes/puntuacionRoutes');
 const reseniaRoutes = require('./src/routes/reseniaRoutes');
 const statsRoutes = require('./src/routes/statsRoutes');
-
+const adminRoutes = require('./src/routes/adminRoutes');
 // Usar rutas
 app.use('/api/users', userRoutes);
 app.use('/api/jikan', jikanRoutes);
@@ -32,6 +32,7 @@ app.use('/api/listas', listaRoutes);
 app.use('/api/puntuaciones', puntuacionRoutes);
 app.use('/api/resenias', reseniaRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {

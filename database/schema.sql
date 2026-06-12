@@ -13,7 +13,8 @@ CREATE TABLE Usuario (
   fecha_nacimiento  DATE          NULL,
   email_verificado  BOOLEAN       NOT NULL DEFAULT FALSE,
   token_verificacion VARCHAR(255) NULL,
-  avatar             VARCHAR(500) DEFAULT NULL
+  avatar             VARCHAR(500) DEFAULT NULL,
+  rol ENUM('user', 'admin') DEFAULT 'user' NOT NULL
 );
 
 CREATE TABLE Anime (
