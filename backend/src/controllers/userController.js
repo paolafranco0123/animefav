@@ -112,4 +112,25 @@ const uploadAvatar = async (req, res) => {
     res.status(500).json({ error: 'Error al subir el avatar' });
   }
 };
-module.exports = { register, login, getProfile, verifyEmail, updateAvatar, uploadAvatar };
+
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { nombre } = req.body;
+    if (!nombre || nombre.trim().length < 2) {
+      return res.status(400).json({ error: 'El nombre debe tener al menos 2 caracteres' });
+    }
+    const currentUser = await User.findById(userId);
+    await User.update(userId, {
+      nombre: nombre.trim(),
+      email: currentUser.email,
+      fecha_nacimiento: currentUser.fecha_nacimiento
+    });
+    const updatedUser = await User.findById(userId);
+    res.json({ message: 'Perfil actualizado', user: updatedUser });
+  } catch (error) {
+    console.error('Error en updateProfile:', error);
+    res.status(500).json({ error: 'Error al actualizar perfil' });
+  }
+};
+module.exports = { register, login, getProfile, verifyEmail, updateAvatar, uploadAvatar, updateProfile };

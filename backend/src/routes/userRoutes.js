@@ -10,5 +10,6 @@ router.post('/login', userController.login);
 router.get('/verify/:token', userController.verifyEmail);
 router.get('/profile', authMiddleware, userController.getProfile);
 router.put('/avatar', authMiddleware, userController.updateAvatar);
+router.put('/profile', authMiddleware, userController.updateProfile);
 
 module.exports = router;
