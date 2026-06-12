@@ -168,11 +168,43 @@ Next.js ofrece enrutamiento automático basado en carpetas, lo que simplifica mu
 
 ## 📝 Problemas resueltos durante el desarrollo
 
-- **Rate limiting de Jikan:** implementé caché con Redis para evitar superar el límite de la API
-- **Merge conflicts con el repositorio del instituto:** aprendí a resolver conflictos de Git y a trabajar con múltiples remotos
-- **Exposición de credenciales:** detecté y eliminé una API key expuesta en el historial de Git
-- **Sincronización del estado de usuario:** implementé el patrón stale-while-revalidate en el AuthContext para que el avatar y el rol se carguen correctamente al recargar
+## 📝 Problemas resueltos durante el desarrollo
 
+**La búsqueda siempre devolvía los mismos resultados**
+El buscador siempre mostraba los mismos 25 animes sin importar lo que escribiera. Después de mucho revisar el código descubrí que el problema estaba en cómo construía la URL de la petición — cuando el nombre tenía espacios como "Dragon Ball Z", la URL se rompía y el backend recibía una búsqueda vacía. Lo arreglé usando el objeto `params` de axios en lugar de construir la URL a mano, que se encarga automáticamente de escapar los caracteres especiales.
+
+**Credenciales expuestas en GitHub**
+Sin querer subí el archivo `.env` con una API key real a un repositorio público. Borrar el archivo no era suficiente porque Git guarda el historial completo. Tuve que revocar la clave inmediatamente, limpiar todos los commits anteriores donde aparecía con `git filter-branch` y hacer un push forzado. Desde entonces siempre configuro el `.gitignore` antes del primer commit.
+
+**Los cambios en el backend no se reflejaban al reiniciar Docker**
+Durante el desarrollo me desesperé porque cambiaba código del backend y al reiniciar Docker los cambios no aparecían. Aprendí que Docker cachea las capas del contenedor y hay que usar `--build` para forzar la reconstrucción, y `--no-cache` cuando los cambios aún no aparecen. Me costó entenderlo pero ahora tengo claro cuándo usar cada opción.
+
+**El avatar y el rol no aparecían al recargar la página**
+Al recargar la página el avatar desaparecía y el botón de admin no aparecía aunque el usuario fuera admin. El problema era que al iniciar la app leía los datos del usuario de `localStorage`, que solo tenía nombre y email del momento del login pero no el avatar ni el rol. Lo resolví haciendo que al iniciar la app siempre llame al backend para obtener el perfil completo y actualizar el estado.
+
+**Errores de clave foránea al puntuar animes**
+Al intentar puntuar un anime que nunca había abierto antes, el backend fallaba porque intentaba guardar la puntuación con un `id_anime` que no existía en mi base de datos local — los animes vienen de Jikan pero hay que importarlos primero. Diseñé un sistema de importación automática: antes de cualquier operación, el sistema comprueba si el anime existe en la BD local y si no lo importa automáticamente desde Jikan. Así el usuario nunca nota nada.
+
+**Conflictos al sincronizar con el repositorio del instituto**
+Después de semanas desarrollando por mi cuenta, al intentar sincronizar mi fork con el repo del instituto aparecieron más de 15 archivos en conflicto al mismo tiempo. Tuve que aprender a trabajar con múltiples remotos y a resolver cada conflicto manualmente eligiendo qué cambios mantener, los míos o los del instituto, o combinando ambos cuando era posible.
+
+**Certificado SSL de MyAnimeList caído**
+Algunos animes no cargaban y devolvían error 500. Revisando los logs del backend vi que el error venía de Jikan, que no podía conectar con MyAnimeList porque su certificado SSL había expirado. Me llevó un rato darme cuenta de que no era un bug de mi código sino un problema externo. Añadí mensajes de error más claros para que el usuario sepa que el problema es temporal y no de la app.
+
+**La paginación de React Query no actualizaba los resultados**
+Al implementar los filtros de búsqueda, cuando cambiabas el tipo de anime o el estado los resultados no se actualizaban. El problema era que la `queryKey` de React Query no incluía los filtros, solo el texto de búsqueda, así que React Query pensaba que era la misma query y devolvía el resultado cacheado anterior. Lo arreglé añadiendo los filtros a la `queryKey` para que React Query detecte el cambio y haga una nueva petición.
+
+**El panel de admin redirigía al inicio antes de cargar el usuario**
+Al entrar directamente en `/admin` desde el navegador la página redirigía al inicio aunque fuera admin. El problema era una condición de carrera — el `useEffect` que redirige si el usuario no es admin se ejecutaba antes de que el `AuthContext` terminara de cargar el perfil desde el backend, así que `user` era `null` momentáneamente y la redirección se disparaba. Lo solucione añadiendo el estado `loading` a la condición: si todavía está cargando no redirige, espera a tener los datos del usuario.
+
+**Las estadísticas del admin no mostraban datos aunque había animes en las listas**
+La pestaña de estadísticas globales del panel de admin no mostraba nada aunque había animes añadidos. Después de revisar el código vi que las queries SQL eran correctas pero al probarlas directamente en la base de datos sí funcionaban. El problema estaba en el controller — el `console.log` que había añadido para depurar se había colado dentro del template string de la query SQL, así que MySQL intentaba ejecutar el `console.log` como si fuera SQL y fallaba. Me enseñó a revisar bien los template strings multilínea de JavaScript.
+
+**Docker tardaba muchísimo en arrancar o se quedaba colgado**
+En varios momentos durante el desarrollo Docker se quedaba colgado arrancando los contenedores de MySQL y Redis sin dar ningún error claro. Aprendí que MySQL tarda varios segundos en estar listo para aceptar conexiones aunque el contenedor ya esté arrancado, y que el backend intentaba conectarse antes de que la base de datos estuviera lista. El `healthcheck` del `docker-compose.yml` resuelve esto — hace que el backend espere a que MySQL responda correctamente antes de arrancar.
+
+**Los node_modules se subieron al repositorio**
+Al principio no tenía bien configurado el `.gitignore` y Git empezó a trackear los `node_modules` del backend, que tienen miles de archivos. El repositorio se volvió enorme y los push tardaban minutos. Simplemente añadir `node_modules/` al `.gitignore` no eliminaba los archivos que Git ya tenía trackeados — tuve que usar `git rm -r --cached` para decirle a Git que dejara de seguirlos sin borrarlos del disco, y luego hacer un commit limpio.
 ## 👩‍💻 Autora
 
 **Paola Franco**  
