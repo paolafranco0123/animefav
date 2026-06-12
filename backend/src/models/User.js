@@ -33,7 +33,7 @@ static async verifyEmail(token) {
 
   static async findById(id) {
     const query = `
-      SELECT id_usuario, nombre, email, fecha_registro, fecha_nacimiento
+      SELECT id_usuario, nombre, email, fecha_registro, fecha_nacimiento, avatar
       FROM Usuario WHERE id_usuario = ?
     `;
     const [rows] = await db.execute(query, [id]);
