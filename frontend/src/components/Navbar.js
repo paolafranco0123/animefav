@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Search, List, BarChart2, Calendar, User, LogOut, Menu, X, Home } from 'lucide-react';
+import { Search, List, BarChart2, Calendar, User, LogOut, Menu, X, Home, Shield} from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/',         label: 'Inicio',     icon: Home },
@@ -37,6 +37,7 @@ export default function Navbar() {
           </Link>
 
           {/* Links desktop — iconos + texto */}
+        
           <div className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
@@ -58,6 +59,19 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-1">
             {user ? (
               <>
+                {user.rol === 'admin' && (
+  <Link
+    href="/admin"
+    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+      pathname === '/admin'
+        ? 'bg-rose-600/15 text-rose-400'
+        : 'text-gray-400 hover:text-white hover:bg-white/5'
+    }`}
+  >
+    <Shield size={15} />
+    <span>Admin</span>
+  </Link>
+)}
                 <Link
                   href="/profile"
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${

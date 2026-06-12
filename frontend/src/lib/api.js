@@ -44,6 +44,17 @@ export const listasAPI = {
     api.patch(`/listas/${id}/animes/${animeId}/progress`, { episodios_vistos })
 };
 
+
+export const adminAPI = {
+  getDashboard: () => api.get('/admin/dashboard'),
+  getUsuarios: () => api.get('/admin/usuarios'),
+  updateRol: (id, rol) => api.put(`/admin/usuarios/${id}/rol`, { rol }),
+  deleteUsuario: (id) => api.delete(`/admin/usuarios/${id}`),
+  getResenias: () => api.get('/admin/resenias'),
+  deleteResenia: (id) => api.delete(`/admin/resenias/${id}`),
+   getEstadisticas: () => api.get('/admin/estadisticas'),
+};
+
 export const jikanAPI = {
   search: (query, page = 1, filters = {}) => 
     api.get('/jikan/search', { params: { query, page, ...filters } }),

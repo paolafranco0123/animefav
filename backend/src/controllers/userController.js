@@ -53,11 +53,21 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Credenciales invalidas' });
     }
     const token = jwt.sign(
-      { id: user.id_usuario, email: user.email },
+      { id: user.id_usuario, email: user.email, rol: user.rol },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    res.json({ message: 'Login exitoso', token, user: { id: user.id_usuario, nombre: user.nombre, email: user.email } });
+    res.json({
+      message: 'Login exitoso',
+      token,
+      user: {
+        id_usuario: user.id_usuario,
+        nombre: user.nombre,
+        email: user.email,
+        avatar: user.avatar || null,
+        rol: user.rol
+      }
+    });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error al iniciar sesion' });

@@ -31,14 +31,14 @@ static async verifyEmail(token) {
     return rows[0];
   }
 
-  static async findById(id) {
-    const query = `
-      SELECT id_usuario, nombre, email, fecha_registro, fecha_nacimiento, avatar
-      FROM Usuario WHERE id_usuario = ?
-    `;
-    const [rows] = await db.execute(query, [id]);
-    return rows[0];
-  }
+static async findById(id) {
+  const query = `
+    SELECT id_usuario, nombre, email, fecha_registro, fecha_nacimiento, avatar, rol
+    FROM Usuario WHERE id_usuario = ?
+  `;
+  const [rows] = await db.execute(query, [id]);
+  return rows[0];
+}
 
   static async update(id, userData) {
     const { nombre, email, fecha_nacimiento } = userData;
