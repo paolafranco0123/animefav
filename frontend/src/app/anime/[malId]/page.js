@@ -91,7 +91,10 @@ const { data: miResenia, refetch: refetchResenia } = useQuery({
   queryKey: ['resenia', malId],
   queryFn: async () => {
     const r = await reseniasAPI.getByAnime(localAnimeId);
-    return r.data?.reviews?.find(rev => rev.id_usuario === user?.id) || null;
+ 
+   return r.data?.reviews?.find(rev => 
+  rev.id_usuario === user?.id_usuario || rev.id_usuario === user?.id
+) || null;
   },
   enabled: !!localAnimeId
 });
