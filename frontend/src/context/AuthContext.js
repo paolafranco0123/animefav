@@ -37,7 +37,6 @@ const login = async (email, password) => {
   setUser(user);
   return user;
 };
-
   const register = async (data) => {
     const res = await authAPI.register(data);
     return res.data;

@@ -13,6 +13,6 @@ router.put('/usuarios/:id/rol', adminController.updateUsuarioRol);
 router.delete('/usuarios/:id', adminController.deleteUsuario);
 router.get('/resenias', adminController.getResenias);
 router.delete('/resenias/:id', adminController.deleteResenia);
-router.get('/animes', adminController.getAnimes);
+router.get('/estadisticas', adminController.getEstadisticas);
 
 module.exports = router;
