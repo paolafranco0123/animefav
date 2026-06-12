@@ -30,6 +30,9 @@ export const authAPI = {
   login: (data) => api.post('/users/login', data),
   getProfile: () => api.get('/users/profile'),
   updateAvatar: (avatar) => api.put('/users/avatar', { avatar }),
+  uploadAvatar: (formData) => api.post('/users/avatar/upload', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+}),
 };
 
 export const listasAPI = {
