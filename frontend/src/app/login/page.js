@@ -178,7 +178,7 @@ const [form, setForm] = useState({ nombre: '', email: '', password: '', fecha_na
               {!isLogin && (
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">
-                    Fecha de nacimiento <span className="text-gray-600">(opcional)</span>
+                    Fecha de nacimiento <span className="text-gray-600"></span>
                   </label>
                   <input
                     type="date"
