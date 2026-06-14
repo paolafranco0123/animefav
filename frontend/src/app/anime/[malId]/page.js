@@ -88,17 +88,17 @@ const { data: miPuntuacion } = useQuery({
 
 const likeMutation = useMutation({
   mutationFn: (reseniaId) => reseniasAPI.toggleLike(reseniaId),
-  onSuccess: (response, reseniaId) => {
+ onSuccess: (response, reseniaId) => {
   const { liked, total } = response.data;
-  console.log('liked:', liked, 'total:', total);
   queryClient.setQueryData(['resenas-anime', malId], (old) => {
     if (!old) return old;
-    return old.map(r => {
-      console.log('resenia:', r.id_resenia, 'likes antes:', r.likes);
-      return r.id_resenia === Number(reseniaId)
-        ? { ...r, liked, likes: total }
-        : r;
-    });
+    return old
+      .map(r => 
+        r.id_resenia === Number(reseniaId)
+          ? { ...r, liked, likes: total }
+          : r
+      )
+      .sort((a, b) => b.likes - a.likes);
   });
 },
   onError: (error) => {
