@@ -86,6 +86,30 @@ const { data: miPuntuacion } = useQuery({
   enabled: !!localAnimeId  // solo cuando ya tenemos el id
 });
 
+const likeMutation = useMutation({
+  mutationFn: (reseniaId) => reseniasAPI.toggleLike(reseniaId),
+  onSuccess: (response, reseniaId) => {
+  const { liked, total } = response.data;
+  console.log('liked:', liked, 'total:', total);
+  queryClient.setQueryData(['resenas-anime', malId], (old) => {
+    if (!old) return old;
+    return old.map(r => {
+      console.log('resenia:', r.id_resenia, 'likes antes:', r.likes);
+      return r.id_resenia === Number(reseniaId)
+        ? { ...r, liked, likes: total }
+        : r;
+    });
+  });
+},
+  onError: (error) => {
+    console.error('like error:', error);
+  }
+});
+ 
+
+  
+
+
 // like en reseñas
 const { data: resenasAnime, refetch: refetchResenasAnime } = useQuery({
   queryKey: ['resenas-anime', malId],
@@ -93,13 +117,12 @@ const { data: resenasAnime, refetch: refetchResenasAnime } = useQuery({
     const r = await reseniasAPI.getByAnime(localAnimeId);
     return r.data?.reviews || [];
   },
-  enabled: !!localAnimeId
+  enabled: !!localAnimeId,
+  staleTime: 0
 });  
 
-const likeMutation = useMutation({
-  mutationFn: (reseniaId) => reseniasAPI.toggleLike(reseniaId),
-  onSuccess: () => queryClient.invalidateQueries(['resenas-anime', malId])
-});
+
+
 // Reseña
 const { data: miResenia, refetch: refetchResenia } = useQuery({
   queryKey: ['resenia', malId],
@@ -421,10 +444,11 @@ if (miResenia?.id_resenia) {
               </div>
               <button
                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  likeMutation.mutate(Number(r.id_resenia));
-                }}
+               onClick={(e) => {
+  e.stopPropagation();
+  likeMutation.mutate(Number(r.id_resenia));
+}}
+
                 className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-all border shrink-0 ${
                   r.liked
                     ? 'text-rose-400 border-rose-500/30 bg-rose-500/10'

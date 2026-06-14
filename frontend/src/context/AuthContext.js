@@ -40,10 +40,11 @@ const login = async (email, password) => {
     return res.data;
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
+const logout = () => {
+  localStorage.removeItem('token');
+  setUser(null);
+  window.location.href = '/login';
+};
 
   return (
   <AuthContext.Provider value={{ user, setUser, login, register, logout, loading }}>
