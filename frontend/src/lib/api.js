@@ -83,7 +83,8 @@ export const reseniasAPI = {
   getByAnime: (animeId) => api.get(`/resenias/anime/${animeId}`),
   getMyReviews: () => api.get('/resenias/user/my-reviews'),
   update: (id, texto) => api.put(`/resenias/${id}`, { texto }),
-  delete: (id) => api.delete(`/resenias/${id}`)
+  delete: (id) => api.delete(`/resenias/${id}`),
+  toggleLike: (id) => api.post(`/resenias/${id}/like`)
 };
 
 export const statsAPI = {

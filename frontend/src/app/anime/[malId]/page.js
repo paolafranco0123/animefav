@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { jikanAPI, listasAPI, puntuacionesAPI, reseniasAPI } from '@/lib/api';
 import { useRouter, useParams } from 'next/navigation';
-import { Star, Plus, Loader2, ChevronLeft, ExternalLink, Tv, Calendar, Users } from 'lucide-react';
+import { Star, Plus, Loader2, ChevronLeft, ExternalLink, Tv, Calendar, Users, Heart } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -86,6 +86,20 @@ const { data: miPuntuacion } = useQuery({
   enabled: !!localAnimeId  // solo cuando ya tenemos el id
 });
 
+// like en reseñas
+const { data: resenasAnime, refetch: refetchResenasAnime } = useQuery({
+  queryKey: ['resenas-anime', malId],
+  queryFn: async () => {
+    const r = await reseniasAPI.getByAnime(localAnimeId);
+    return r.data?.reviews || [];
+  },
+  enabled: !!localAnimeId
+});  
+
+const likeMutation = useMutation({
+  mutationFn: (reseniaId) => reseniasAPI.toggleLike(reseniaId),
+  onSuccess: () => queryClient.invalidateQueries(['resenas-anime', malId])
+});
 // Reseña
 const { data: miResenia, refetch: refetchResenia } = useQuery({
   queryKey: ['resenia', malId],
@@ -376,6 +390,57 @@ if (miResenia?.id_resenia) {
     </div>
   )}
 </div>
+
+{/* Reseñas de la comunidad */}
+{resenasAnime?.filter(r => r.id_usuario !== user?.id_usuario && r.id_usuario !== user?.id).length > 0 && (
+  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+    <h2 className="text-white font-bold mb-4">
+      Reseñas de la comunidad 
+      <span className="text-gray-500 font-normal text-sm ml-2">
+        ({resenasAnime.filter(r => r.id_usuario !== user?.id_usuario && r.id_usuario !== user?.id).length})
+      </span>
+    </h2>
+    <div className="space-y-3">
+      {resenasAnime
+        .filter(r => r.id_usuario !== user?.id_usuario && r.id_usuario !== user?.id)
+        .map(r => (
+          <div key={r.id_resenia} className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full overflow-hidden border border-rose-500/20 shrink-0">
+  {r.usuario_avatar ? (
+    <img src={r.usuario_avatar} alt={r.usuario_nombre} className="w-full h-full object-cover" />
+  ) : (
+    <div className="w-full h-full bg-rose-600/20 flex items-center justify-center">
+      <span className="text-rose-400 text-xs font-bold">
+        {(r.usuario_nombre || 'U')[0].toUpperCase()}
+      </span>
+    </div> )}
+</div>
+                <span className="text-white text-xs font-medium">{r.usuario_nombre || 'Usuario'}</span>
+              </div>
+              <button
+               type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  likeMutation.mutate(Number(r.id_resenia));
+                }}
+                className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-all border shrink-0 ${
+                  r.liked
+                    ? 'text-rose-400 border-rose-500/30 bg-rose-500/10'
+                    : 'text-gray-500 border-gray-700 hover:text-rose-400 hover:border-rose-500/30'
+                }`}
+              >
+                <Heart size={11} className={r.liked ? 'fill-rose-400' : ''} />
+                <span>{r.likes}</span>
+              </button>
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed">{r.texto}</p>
+          </div>
+        ))}
+    </div>
+  </div>
+)}
 
         {/* Animes relacionados */}
         {related.length > 0 && (

@@ -17,6 +17,14 @@ CREATE TABLE Usuario (
   rol ENUM('user', 'admin') DEFAULT 'user' NOT NULL
 );
 
+CREATE TABLE Resenia_Like (
+  id_usuario INT NOT NULL,
+   id_resenia INT NOT NULL,
+    PRIMARY KEY (id_usuario, id_resenia),
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_resenia) REFERENCES Resenia(id_resenia) ON DELETE CASCADE);
+
+
 CREATE TABLE Anime (
   id_anime         INT AUTO_INCREMENT PRIMARY KEY,
   titulo           VARCHAR(255)  NOT NULL,

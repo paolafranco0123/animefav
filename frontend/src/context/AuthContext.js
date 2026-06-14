@@ -11,11 +11,9 @@ export function AuthProvider({ children }) {
 
 useEffect(() => {
   const token = localStorage.getItem('token');
-  console.log('token en localStorage:', token);
   if (token) {
     authAPI.getProfile()
       .then(res => {
-        console.log('perfil cargado:', res.data);
         setUser(res.data);
       })
       .catch((err) => {
