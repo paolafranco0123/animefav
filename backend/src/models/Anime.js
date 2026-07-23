@@ -24,14 +24,17 @@ class Anime {
     return result.insertId;
   }
   
-  // Obtener todos los animes
-  static async getAll(limit = 50, offset = 0) {
+// Obtener todos los animes
+static async getAll(limit = 50, offset = 0) {
+  const safeLimit = parseInt(limit) || 50;
+  const safeOffset = parseInt(offset) || 0;
+
   const query = `
     SELECT * FROM Anime 
     ORDER BY fecha_estreno DESC 
-    LIMIT ? OFFSET ?
+    LIMIT ${safeLimit} OFFSET ${safeOffset}
   `;
-  const [rows] = await db.execute(query, [parseInt(limit), parseInt(offset)]);
+  const [rows] = await db.query(query);
   return rows;
 }
   
