@@ -14,7 +14,6 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - animefav_network
     healthcheck:
@@ -40,7 +39,7 @@ services:
       retries: 5
 
   backend:
-    build:
+     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: animefav_backend
@@ -53,6 +52,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
+      DATABASE_URL: mysql://${DB_USER}:${DB_PASS}@db:3306/${DB_NAME}   # <-- nuevo, lo usa Prisma
       JWT_SECRET: ${JWT_SECRET}
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -61,6 +61,7 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       NODE_ENV: production
+    entrypoint: ["/bin/sh", "entrypoint.sh"]   # <-- nuevo
     depends_on:
       db:
         condition: service_healthy

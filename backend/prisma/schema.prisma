@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Usuario {
+  idUsuario         Int             @id @default(autoincrement()) @map("id_usuario")
+  nombre            String          @db.VarChar(100)
+  email             String          @unique(map: "email") @db.VarChar(255)
+  password          String          @db.VarChar(255)
+  fechaRegistro     DateTime        @default(now()) @map("fecha_registro") @db.Timestamp(0)
+  fechaNacimiento   DateTime?       @map("fecha_nacimiento") @db.Date
+  emailVerificado   Boolean         @default(false) @map("email_verificado")
+  tokenVerificacion String?         @map("token_verificacion") @db.VarChar(255)
+  avatar            String?         @db.VarChar(500)
+  rol               Rol             @default(user)
+  listas            Lista[]
+  puntuaciones      Puntuacion[]
+  recomendaciones   Recomendacion[]
+  resenias          Resenia[]
+  reseniaLikes      ReseniaLike[]
+
+  @@map("Usuario")
+}
+
+model Anime {
+  idAnime         Int             @id @default(autoincrement()) @map("id_anime")
+  titulo          String          @db.VarChar(255)
+  descripcion     String?         @db.Text
+  fechaEstreno    DateTime?       @map("fecha_estreno") @db.Date
+  numEpisodios    Int?            @default(0) @map("num_episodios")
+  edadRecomendada String?         @map("edad_recomendada") @db.VarChar(50)
+  imagenPortada   String?         @map("imagen_portada") @db.VarChar(500)
+  malId           Int?            @unique(map: "mal_id") @map("mal_id")
+  generos         AnimeGenero[]
+  listas          ListaAnime[]
+  puntuaciones    Puntuacion[]
+  recomendaciones Recomendacion[]
+  resenias        Resenia[]
+
+  @@map("Anime")
+}
+
+model Genero {
+  idGenero Int           @id @default(autoincrement()) @map("id_genero")
+  nombre   String        @unique(map: "nombre") @db.VarChar(100)
+  animes   AnimeGenero[]
+
+  @@map("Genero")
+}
+
+model AnimeGenero {
+  idAnime  Int    @map("id_anime")
+  idGenero Int    @map("id_genero")
+  anime    Anime  @relation(fields: [idAnime], references: [idAnime], onDelete: Cascade, onUpdate: NoAction, map: "Anime_Genero_ibfk_1")
+  genero   Genero @relation(fields: [idGenero], references: [idGenero], onDelete: Cascade, onUpdate: NoAction, map: "Anime_Genero_ibfk_2")
+
+  @@id([idAnime, idGenero])
+  @@index([idGenero], map: "id_genero")
+  @@map("Anime_Genero")
+}
+
+model Lista {
+  idLista       Int          @id @default(autoincrement()) @map("id_lista")
+  nombre        String       @db.VarChar(100)
+  tipo          TipoLista    @default(personalizada)
+  color         String       @default("gray") @db.VarChar(20)
+  idUsuario     Int          @map("id_usuario")
+  fechaCreacion DateTime     @default(now()) @map("fecha_creacion") @db.Timestamp(0)
+  usuario       Usuario      @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade, onUpdate: NoAction, map: "Lista_ibfk_1")
+  animes        ListaAnime[]
+
+  @@unique([nombre, idUsuario], name: "uq_lista_usuario", map: "uq_lista_usuario")
+  @@index([idUsuario], map: "id_usuario")
+  @@map("Lista")
+}
+
+model ListaAnime {
+  idLista         Int      @map("id_lista")
+  idAnime         Int      @map("id_anime")
+  fechaAnadido    DateTime @default(now()) @map("fecha_anadido") @db.Timestamp(0)
+  episodiosVistos Int      @default(0) @map("episodios_vistos")
+  lista           Lista    @relation(fields: [idLista], references: [idLista], onDelete: Cascade, onUpdate: NoAction, map: "Lista_Anime_ibfk_1")
+  anime           Anime    @relation(fields: [idAnime], references: [idAnime], onDelete: Cascade, onUpdate: NoAction, map: "Lista_Anime_ibfk_2")
+
+  @@id([idLista, idAnime])
+  @@index([idAnime], map: "id_anime")
+  @@map("Lista_Anime")
+}
+
+model Puntuacion {
+  idPuntuacion Int      @id @default(autoincrement()) @map("id_puntuacion")
+  idUsuario    Int      @map("id_usuario")
+  idAnime      Int      @map("id_anime")
+  valor        Int      @db.TinyInt
+  fechaCreada  DateTime @default(now()) @map("fecha_creada") @db.Timestamp(0)
+  usuario      Usuario  @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade, onUpdate: NoAction, map: "Puntuacion_ibfk_1")
+  anime        Anime    @relation(fields: [idAnime], references: [idAnime], onDelete: Cascade, onUpdate: NoAction, map: "Puntuacion_ibfk_2")
+
+  @@unique([idUsuario, idAnime], name: "uq_puntuacion", map: "uq_puntuacion")
+  @@index([idAnime], map: "id_anime")
+  @@map("Puntuacion")
+}
+
+model Resenia {
+  idResenia Int           @id @default(autoincrement()) @map("id_resenia")
+  idUsuario Int           @map("id_usuario")
+  idAnime   Int           @map("id_anime")
+  texto     String        @db.Text
+  fecha     DateTime      @default(now()) @db.Timestamp(0)
+  usuario   Usuario       @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade, onUpdate: NoAction, map: "Resenia_ibfk_1")
+  anime     Anime         @relation(fields: [idAnime], references: [idAnime], onDelete: Cascade, onUpdate: NoAction, map: "Resenia_ibfk_2")
+  likes     ReseniaLike[]
+
+  @@unique([idUsuario, idAnime], name: "uq_resenia", map: "uq_resenia")
+  @@index([idAnime], map: "id_anime")
+  @@map("Resenia")
+}
+
+model ReseniaLike {
+  idUsuario Int     @map("id_usuario")
+  idResenia Int     @map("id_resenia")
+  usuario   Usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade, onUpdate: NoAction, map: "Resenia_Like_ibfk_1")
+  resenia   Resenia @relation(fields: [idResenia], references: [idResenia], onDelete: Cascade, onUpdate: NoAction, map: "Resenia_Like_ibfk_2")
+
+  @@id([idUsuario, idResenia])
+  @@index([idResenia], map: "id_resenia")
+  @@map("Resenia_Like")
+}
+
+model Recomendacion {
+  idRecomendacion Int      @id @default(autoincrement()) @map("id_recomendacion")
+  idUsuario       Int      @map("id_usuario")
+  idAnime         Int      @map("id_anime")
+  motivo          String?  @db.VarChar(255)
+  fechaGenerada   DateTime @default(now()) @map("fecha_generada") @db.Timestamp(0)
+  usuario         Usuario  @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade, onUpdate: NoAction, map: "Recomendacion_ibfk_1")
+  anime           Anime    @relation(fields: [idAnime], references: [idAnime], onDelete: Cascade, onUpdate: NoAction, map: "Recomendacion_ibfk_2")
+
+  @@index([idAnime], map: "id_anime")
+  @@index([idUsuario], map: "id_usuario")
+  @@map("Recomendacion")
+}
+
+enum Rol {
+  user
+  admin
+}
+
+enum TipoLista {
+  predeterminada
+  personalizada
+}
